@@ -11,12 +11,16 @@ import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
 import { useHasAccess } from '~/hooks';
+import ModelAcceptanceStatus from './ModelAcceptanceStatus';
+import store from '~/store';
 
 const defaultInterface = getConfigDefaults().interface;
+
 
 export default function Header() {
   const { data: startupConfig } = useGetStartupConfig();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
+  const { conversation } = store.useCreateConversationAtom(0);
 
   const interfaceConfig = useMemo(
     () => startupConfig?.interface ?? defaultInterface,
@@ -34,6 +38,16 @@ export default function Header() {
   });
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+
+  const modelSpecs = startupConfig?.modelSpecs?.list ?? [];
+  const currentSpec = modelSpecs.find((spec) =>
+    spec.preset.endpoint === conversation?.endpoint && spec.preset.model === conversation?.model,
+  );
+
+  const handleReviewFromHeader = () => {
+    // Dispatch an event that ModelSelectorContext listens for to open the modal
+    window.dispatchEvent(new CustomEvent('review-model-terms'));
+  };
 
   return (
     <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
@@ -57,6 +71,13 @@ export default function Header() {
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
             <ModelSelector startupConfig={startupConfig} />
+            {currentSpec && (
+              <ModelAcceptanceStatus
+                modelName={currentSpec.name}
+                modelLabel={currentSpec.label}
+                onReview={handleReviewFromHeader}
+              />
+            )}
             {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
             {hasAccessToBookmarks === true && <BookmarkMenu />}
             {hasAccessToMultiConvo === true && <AddMultiConvo />}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { OGDialog, DialogTemplate } from '@librechat/client';
 import type { TModelSpec } from 'librechat-data-provider';
 import { useLocalize } from '~/hooks';
@@ -37,11 +37,17 @@ const ModelInfoModal = ({
 
   const initialAcknowledgments = useMemo(() => {
     const acks: Record<string, boolean> = {};
-    acknowledgmentKeys.forEach(key => acks[key] = false);
+    const hasAccepted = modelSpec?.name && localStorage.getItem(`model-acceptance-${modelSpec.name}`);
+    acknowledgmentKeys.forEach(key => acks[key] = hasAccepted ? true : false);
     return acks;
-  }, [acknowledgmentKeys]);
+  }, [acknowledgmentKeys, modelSpec?.name]);
 
   const [acknowledgments, setAcknowledgments] = useState(initialAcknowledgments);
+
+  // Reset acknowledgments when modal opens or modelSpec changes
+  useEffect(() => {
+    setAcknowledgments(initialAcknowledgments);
+  }, [initialAcknowledgments]);
 
   const handleCheckboxChange = (key: string) => {
     setAcknowledgments((prev) => ({
@@ -58,10 +64,34 @@ const ModelInfoModal = ({
   const handleAccept = () => {
     if (requireAcknowledgment && !allAcknowledged) return;
     
+    // Store acceptance in localStorage
+    if (modelSpec?.name) {
+      const acceptanceKey = `model-acceptance-${modelSpec.name}`;
+      localStorage.setItem(acceptanceKey, JSON.stringify({
+        modelName: modelSpec.name,
+        modelLabel: modelSpec.label,
+        acceptedAt: new Date().toISOString(),
+      }));
+    }
+    
     // Reset acknowledgments for next time
     setAcknowledgments(initialAcknowledgments);
     onOpenChange(false);
+    // Force badge re-render by dispatching storage event
+    window.dispatchEvent(new Event('storage'));
   };
+
+  const handleRetractConsent = () => {
+    if (modelSpec?.name) {
+      localStorage.removeItem(`model-acceptance-${modelSpec.name}`);
+    }
+    onOpenChange(false);
+    // Force badge re-render by dispatching storage event
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  // Check if user has already accepted terms for this model
+  const hasAcceptance = modelSpec?.name && localStorage.getItem(`model-acceptance-${modelSpec.name}`);
 
   const handleCancel = () => {
     // Reset acknowledgments
@@ -166,7 +196,8 @@ const ModelInfoModal = ({
                                 type="checkbox"
                                 checked={acknowledgments[checkboxKey] || false}
                                 onChange={() => handleCheckboxChange(checkboxKey)}
-                                className={`mt-0.5 h-4 w-4 cursor-pointer rounded ${colors.checkbox}`}
+                                disabled={!!hasAcceptance}
+                                className={`mt-0.5 h-4 w-4 cursor-pointer rounded ${colors.checkbox} ${hasAcceptance ? 'opacity-60 cursor-not-allowed' : ''}`}
                               />
                               <span className={`text-sm font-medium ${colors.title}`}>
                                 {warning.acknowledgment}
@@ -195,6 +226,7 @@ const ModelInfoModal = ({
                         type="checkbox"
                         checked={acknowledgments.costInfo || false}
                         onChange={() => handleCheckboxChange('costInfo')}
+                        disabled={!!hasAcceptance}
                         className="mt-0.5 h-4 w-4 cursor-pointer rounded border-blue-400 text-blue-600 focus:ring-blue-500 dark:border-blue-600"
                       />
                       <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -223,17 +255,26 @@ const ModelInfoModal = ({
             >
               Cancel
             </button>
-            <button
-              onClick={handleAccept}
-              disabled={requireAcknowledgment && !allAcknowledged}
-              className={`inline-flex h-10 items-center justify-center rounded-lg px-6 py-2 text-sm font-medium text-white transition-colors ${
-                !requireAcknowledgment || allAcknowledged
-                  ? 'bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700'
-                  : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'
-              }`}
-            >
-              {requireAcknowledgment ? 'Accept & Continue' : 'Continue'}
-            </button>
+            {hasAcceptance ? (
+              <button
+                onClick={handleRetractConsent}
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-red-500 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 focus:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+              >
+                Retract Consent
+              </button>
+            ) : (
+              <button
+                onClick={handleAccept}
+                disabled={requireAcknowledgment && !allAcknowledged}
+                className={`inline-flex h-10 items-center justify-center rounded-lg px-6 py-2 text-sm font-medium text-white transition-colors ${
+                  !requireAcknowledgment || allAcknowledged
+                    ? 'bg-green-500 hover:bg-green-600 focus:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700'
+                    : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'
+                }`}
+              >
+                {requireAcknowledgment ? 'Accept & Continue' : 'Continue'}
+              </button>
+            )}
           </div>
         }
       />

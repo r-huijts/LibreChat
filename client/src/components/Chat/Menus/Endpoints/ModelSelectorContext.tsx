@@ -40,6 +40,7 @@ type ModelSelectorContextType = {
   modelInfoModalOpen: boolean;
   setModelInfoModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   selectedModelSpec: t.TModelSpec | null;
+  setSelectedModelSpec: React.Dispatch<React.SetStateAction<t.TModelSpec | null>>;
 } & ReturnType<typeof useKeyDialog>;
 
 const ModelSelectorContext = createContext<ModelSelectorContextType | undefined>(undefined);
@@ -127,21 +128,14 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     setSelectedValues,
   });
 
-  // Show modal on initial load if default model has modalInfo
+  // Show modal on initial load if default model has modalInfo and not already acknowledged
   useEffect(() => {
-    console.log('Modal effect running:', { 
-      endpoint: selectedValues.endpoint, 
-      model: selectedValues.model, 
-      hasShown: hasShownInitialModal.current 
-    });
-    
     // Only run when selectedValues are populated and we haven't shown the initial modal yet
     if (selectedValues.endpoint && selectedValues.model && !hasShownInitialModal.current) {
       const matchingSpec = findMatchingSpec(selectedValues.endpoint, selectedValues.model);
-      console.log('Found matching spec:', matchingSpec);
-      
-      if (matchingSpec?.modalInfo) {
-        console.log('Showing initial modal for:', matchingSpec.label);
+      const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+
+      if (matchingSpec?.modalInfo && !hasAcceptance) {
         setSelectedModelSpec(matchingSpec);
         setModelInfoModalOpen(true);
         hasShownInitialModal.current = true; // Mark that we've shown the initial modal
@@ -234,8 +228,9 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     if (hasChanged) {
       // Use the spec directly since we already have it
       setSelectedModelSpec(spec);
-      // Only show modal if spec has modalInfo
-      if (spec.modalInfo) {
+      // Only show modal if spec has modalInfo and not already acknowledged
+      const hasAcceptance = spec.name && localStorage.getItem(`model-acceptance-${spec.name}`);
+      if (spec.modalInfo && !hasAcceptance) {
         setModelInfoModalOpen(true);
       }
       setPreviousSelection(newSelection);
@@ -266,8 +261,9 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
         // Try to find a matching spec for this endpoint
         const matchingSpec = findMatchingSpec(endpoint.value);
         setSelectedModelSpec(matchingSpec);
-        // Only show modal if spec has modalInfo
-        if (matchingSpec?.modalInfo) {
+        // Only show modal if spec has modalInfo and not already acknowledged
+        const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+        if (matchingSpec?.modalInfo && !hasAcceptance) {
           setModelInfoModalOpen(true);
         }
         setPreviousSelection(newSelection);
@@ -308,8 +304,9 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       // Try to find a matching spec for this endpoint + model combination
       const matchingSpec = findMatchingSpec(endpoint.value, model);
       setSelectedModelSpec(matchingSpec);
-      // Only show modal if spec has modalInfo
-      if (matchingSpec?.modalInfo) {
+      // Only show modal if spec has modalInfo and not already acknowledged
+      const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+      if (matchingSpec?.modalInfo && !hasAcceptance) {
         setModelInfoModalOpen(true);
       }
       setPreviousSelection(newSelection);
@@ -343,6 +340,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     modelInfoModalOpen,
     setModelInfoModalOpen,
     selectedModelSpec,
+    setSelectedModelSpec,
     // Dialog
     ...keyProps,
   };

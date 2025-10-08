@@ -34,7 +34,26 @@ function ModelSelectorContent() {
     modelInfoModalOpen,
     setModelInfoModalOpen,
     selectedModelSpec,
+    setSelectedModelSpec,
   } = useModelSelectorContext();
+
+  // Find the current model spec for acceptance status
+  const currentSpec = modelSpecs.find(spec => 
+    spec.name === selectedValues.modelSpec || 
+    (spec.preset.endpoint === selectedValues.endpoint && spec.preset.model === selectedValues.model)
+  );
+
+  // Listen for header review action
+  React.useEffect(() => {
+    const handler = () => {
+      if (currentSpec) {
+        setSelectedModelSpec(currentSpec);
+        setModelInfoModalOpen(true);
+      }
+    };
+    window.addEventListener('review-model-terms', handler);
+    return () => window.removeEventListener('review-model-terms', handler);
+  }, [currentSpec, setModelInfoModalOpen, setSelectedModelSpec]);
 
   const selectedIcon = useMemo(
     () =>
@@ -73,7 +92,7 @@ function ModelSelectorContent() {
   );
 
   return (
-    <div className="relative flex w-full max-w-md flex-col items-center gap-2">
+    <div className="relative flex w-full max-w-md flex-row items-center gap-2">
       <Menu
         values={selectedValues}
         onValuesChange={(values: Record<string, any>) => {

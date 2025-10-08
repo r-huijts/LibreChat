@@ -1,6 +1,7 @@
 import { v4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
+import { useGetStartupConfig } from '~/data-provider';
 import {
   Constants,
   QueryKeys,
@@ -64,6 +65,8 @@ export default function useChatFunctions({
   const getSender = useGetSender();
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
+  const { data: startupConfig } = useGetStartupConfig();
+  const modelSpecs = startupConfig?.modelSpecs?.list ?? [];
   const setFilesToDelete = useSetFilesToDelete();
   const getEphemeralAgent = useGetEphemeralAgent();
   const isTemporary = useRecoilValue(store.isTemporary);
@@ -102,6 +105,22 @@ export default function useChatFunctions({
     if (endpoint === null) {
       console.error('No endpoint available');
       return;
+    }
+
+    // Check if model requires consent and has it
+    const currentSpec = modelSpecs.find(spec => 
+      spec.preset.endpoint === conversation?.endpoint && 
+      spec.preset.model === conversation?.model
+    );
+
+    if (currentSpec?.modalInfo && currentSpec?.name) {
+      const hasConsent = localStorage.getItem(`model-acceptance-${currentSpec.name}`);
+      if (!hasConsent) {
+        // Open the modal instead of sending message
+        window.dispatchEvent(new CustomEvent('review-model-terms'));
+        console.warn('Cannot send message: consent required for this model');
+        return;
+      }
     }
 
     conversationId = conversationId ?? conversation?.conversationId ?? null;
