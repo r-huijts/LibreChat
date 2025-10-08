@@ -6,6 +6,7 @@ import { renderModelSpecs, renderEndpoints, renderSearchResults } from './compon
 import { getSelectedIcon, getDisplayValue } from './utils';
 import { CustomMenu as Menu } from './CustomMenu';
 import DialogManager from './DialogManager';
+import ModelInfoModal from './ModelInfoModal';
 import { useLocalize } from '~/hooks';
 
 function ModelSelectorContent() {
@@ -29,6 +30,10 @@ function ModelSelectorContent() {
     keyDialogOpen,
     onOpenChange,
     keyDialogEndpoint,
+    // Model Info Modal
+    modelInfoModalOpen,
+    setModelInfoModalOpen,
+    selectedModelInfo,
   } = useModelSelectorContext();
 
   const selectedIcon = useMemo(
@@ -96,6 +101,13 @@ function ModelSelectorContent() {
         onOpenChange={onOpenChange}
         endpointsConfig={endpointsConfig || {}}
         keyDialogEndpoint={keyDialogEndpoint || undefined}
+      />
+      <ModelInfoModal
+        open={modelInfoModalOpen}
+        onOpenChange={setModelInfoModalOpen}
+        modelName={selectedModelInfo.modelName}
+        endpointName={selectedModelInfo.endpointName}
+        specDescription={selectedModelInfo.specDescription}
       />
     </div>
   );

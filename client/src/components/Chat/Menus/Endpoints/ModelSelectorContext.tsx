@@ -36,6 +36,14 @@ type ModelSelectorContextType = {
   handleSelectSpec: (spec: t.TModelSpec) => void;
   handleSelectEndpoint: (endpoint: Endpoint) => void;
   handleSelectModel: (endpoint: Endpoint, model: string) => void;
+  // Model Info Modal
+  modelInfoModalOpen: boolean;
+  setModelInfoModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedModelInfo: {
+    modelName: string | null;
+    endpointName: string | null;
+    specDescription?: string;
+  };
 } & ReturnType<typeof useKeyDialog>;
 
 const ModelSelectorContext = createContext<ModelSelectorContextType | undefined>(undefined);
@@ -126,6 +134,22 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const [searchValue, setSearchValueState] = useState('');
   const [endpointSearchValues, setEndpointSearchValues] = useState<Record<string, string>>({});
 
+  // Model Info Modal state
+  const [modelInfoModalOpen, setModelInfoModalOpen] = useState(false);
+  const [previousSelection, setPreviousSelection] = useState<SelectedValues>({
+    endpoint: endpoint || '',
+    model: model || '',
+    modelSpec: spec || '',
+  });
+  const [selectedModelInfo, setSelectedModelInfo] = useState<{
+    modelName: string | null;
+    endpointName: string | null;
+    specDescription?: string;
+  }>({
+    modelName: null,
+    endpointName: null,
+  });
+
   const keyProps = useKeyDialog();
 
   /** Memoized search results */
@@ -159,11 +183,30 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     } else if (isAssistantsEndpoint(spec.preset.endpoint)) {
       model = spec.preset.assistant_id ?? '';
     }
-    setSelectedValues({
+    
+    const newSelection = {
       endpoint: spec.preset.endpoint,
       model,
       modelSpec: spec.name,
-    });
+    };
+    
+    // Check if selection changed
+    const hasChanged = 
+      previousSelection.endpoint !== newSelection.endpoint ||
+      previousSelection.model !== newSelection.model ||
+      previousSelection.modelSpec !== newSelection.modelSpec;
+    
+    if (hasChanged) {
+      setSelectedModelInfo({
+        modelName: spec.label || spec.name,
+        endpointName: spec.preset.endpoint,
+        specDescription: spec.description,
+      });
+      setModelInfoModalOpen(true);
+      setPreviousSelection(newSelection);
+    }
+    
+    setSelectedValues(newSelection);
   };
 
   const handleSelectEndpoint = (endpoint: Endpoint) => {
@@ -171,11 +214,29 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       if (endpoint.value) {
         onSelectEndpoint?.(endpoint.value);
       }
-      setSelectedValues({
+      
+      const newSelection = {
         endpoint: endpoint.value,
         model: '',
         modelSpec: '',
-      });
+      };
+      
+      // Check if selection changed
+      const hasChanged = 
+        previousSelection.endpoint !== newSelection.endpoint ||
+        previousSelection.model !== newSelection.model ||
+        previousSelection.modelSpec !== newSelection.modelSpec;
+      
+      if (hasChanged) {
+        setSelectedModelInfo({
+          modelName: endpoint.label,
+          endpointName: endpoint.value,
+        });
+        setModelInfoModalOpen(true);
+        setPreviousSelection(newSelection);
+      }
+      
+      setSelectedValues(newSelection);
     }
   };
 
@@ -193,11 +254,37 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     } else if (endpoint.value) {
       onSelectEndpoint?.(endpoint.value, { model });
     }
-    setSelectedValues({
+    
+    const newSelection = {
       endpoint: endpoint.value,
       model,
       modelSpec: '',
-    });
+    };
+    
+    // Check if selection changed
+    const hasChanged = 
+      previousSelection.endpoint !== newSelection.endpoint ||
+      previousSelection.model !== newSelection.model ||
+      previousSelection.modelSpec !== newSelection.modelSpec;
+    
+    if (hasChanged) {
+      // Get display name based on endpoint type
+      let modelDisplayName = model;
+      if (isAgentsEndpoint(endpoint.value) && endpoint.agentNames?.[model]) {
+        modelDisplayName = endpoint.agentNames[model];
+      } else if (isAssistantsEndpoint(endpoint.value) && endpoint.assistantNames?.[model]) {
+        modelDisplayName = endpoint.assistantNames[model];
+      }
+      
+      setSelectedModelInfo({
+        modelName: modelDisplayName,
+        endpointName: endpoint.label,
+      });
+      setModelInfoModalOpen(true);
+      setPreviousSelection(newSelection);
+    }
+    
+    setSelectedValues(newSelection);
   };
 
   const value = {
@@ -221,6 +308,10 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     setEndpointSearchValue,
     endpointRequiresUserKey,
     setSearchValue: setDebouncedSearchValue,
+    // Model Info Modal
+    modelInfoModalOpen,
+    setModelInfoModalOpen,
+    selectedModelInfo,
     // Dialog
     ...keyProps,
   };
