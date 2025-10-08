@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce';
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
@@ -127,6 +127,28 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     setSelectedValues,
   });
 
+  // Show modal on initial load if default model has modalInfo
+  useEffect(() => {
+    console.log('Modal effect running:', { 
+      endpoint: selectedValues.endpoint, 
+      model: selectedValues.model, 
+      hasShown: hasShownInitialModal.current 
+    });
+    
+    // Only run when selectedValues are populated and we haven't shown the initial modal yet
+    if (selectedValues.endpoint && selectedValues.model && !hasShownInitialModal.current) {
+      const matchingSpec = findMatchingSpec(selectedValues.endpoint, selectedValues.model);
+      console.log('Found matching spec:', matchingSpec);
+      
+      if (matchingSpec?.modalInfo) {
+        console.log('Showing initial modal for:', matchingSpec.label);
+        setSelectedModelSpec(matchingSpec);
+        setModelInfoModalOpen(true);
+        hasShownInitialModal.current = true; // Mark that we've shown the initial modal
+      }
+    }
+  }, [selectedValues.endpoint, selectedValues.model]); // Watch for selectedValues changes
+
   const [searchValue, setSearchValueState] = useState('');
   const [endpointSearchValues, setEndpointSearchValues] = useState<Record<string, string>>({});
 
@@ -138,6 +160,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     modelSpec: spec || '',
   });
   const [selectedModelSpec, setSelectedModelSpec] = useState<t.TModelSpec | null>(null);
+  const hasShownInitialModal = useRef(false);
 
   const keyProps = useKeyDialog();
 
