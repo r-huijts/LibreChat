@@ -164,10 +164,12 @@ export const useEndpoints = ({
       }
 
       // For other endpoints with models from the modelsQuery
+      // Skip endpoints that are configured in modelSpecs to avoid redundant model lists
       else if (
         ep !== EModelEndpoint.agents &&
         ep !== EModelEndpoint.assistants &&
-        (modelsQuery.data?.[ep]?.length ?? 0) > 0
+        (modelsQuery.data?.[ep]?.length ?? 0) > 0 &&
+        !startupConfig?.modelSpecs?.list?.some(spec => spec.preset.endpoint === ep)
       ) {
         result.models = modelsQuery.data?.[ep]?.map((model) => ({
           name: model,

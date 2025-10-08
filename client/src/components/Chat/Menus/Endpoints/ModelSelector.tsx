@@ -33,7 +33,7 @@ function ModelSelectorContent() {
     // Model Info Modal
     modelInfoModalOpen,
     setModelInfoModalOpen,
-    selectedModelInfo,
+    selectedModelSpec,
   } = useModelSelectorContext();
 
   const selectedIcon = useMemo(
@@ -105,9 +105,7 @@ function ModelSelectorContent() {
       <ModelInfoModal
         open={modelInfoModalOpen}
         onOpenChange={setModelInfoModalOpen}
-        modelName={selectedModelInfo.modelName}
-        endpointName={selectedModelInfo.endpointName}
-        specDescription={selectedModelInfo.specDescription}
+        modelSpec={selectedModelSpec}
       />
     </div>
   );

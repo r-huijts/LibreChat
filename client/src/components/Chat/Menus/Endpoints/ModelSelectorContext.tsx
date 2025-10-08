@@ -39,11 +39,7 @@ type ModelSelectorContextType = {
   // Model Info Modal
   modelInfoModalOpen: boolean;
   setModelInfoModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedModelInfo: {
-    modelName: string | null;
-    endpointName: string | null;
-    specDescription?: string;
-  };
+  selectedModelSpec: t.TModelSpec | null;
 } & ReturnType<typeof useKeyDialog>;
 
 const ModelSelectorContext = createContext<ModelSelectorContextType | undefined>(undefined);
@@ -141,14 +137,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     model: model || '',
     modelSpec: spec || '',
   });
-  const [selectedModelInfo, setSelectedModelInfo] = useState<{
-    modelName: string | null;
-    endpointName: string | null;
-    specDescription?: string;
-  }>({
-    modelName: null,
-    endpointName: null,
-  });
+  const [selectedModelSpec, setSelectedModelSpec] = useState<t.TModelSpec | null>(null);
 
   const keyProps = useKeyDialog();
 
@@ -175,6 +164,29 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     }));
   };
 
+  // Helper function to find matching modelSpec
+  const findMatchingSpec = (endpoint: string, model?: string): t.TModelSpec | null => {
+    if (!modelSpecs || modelSpecs.length === 0) {
+      return null;
+    }
+
+    // Try to find spec that matches endpoint and model
+    return modelSpecs.find((spec) => {
+      const specEndpoint = spec.preset.endpoint;
+      const specModel = spec.preset.model || spec.preset.agent_id || spec.preset.assistant_id;
+      
+      if (specEndpoint === endpoint) {
+        // If model is provided, match it too
+        if (model && specModel) {
+          return specModel === model;
+        }
+        // If no model provided, match endpoint only
+        return !specModel;
+      }
+      return false;
+    }) || null;
+  };
+
   const handleSelectSpec = (spec: t.TModelSpec) => {
     let model = spec.preset.model ?? null;
     onSelectSpec?.(spec);
@@ -197,12 +209,12 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       previousSelection.modelSpec !== newSelection.modelSpec;
     
     if (hasChanged) {
-      setSelectedModelInfo({
-        modelName: spec.label || spec.name,
-        endpointName: spec.preset.endpoint,
-        specDescription: spec.description,
-      });
-      setModelInfoModalOpen(true);
+      // Use the spec directly since we already have it
+      setSelectedModelSpec(spec);
+      // Only show modal if spec has modalInfo
+      if (spec.modalInfo) {
+        setModelInfoModalOpen(true);
+      }
       setPreviousSelection(newSelection);
     }
     
@@ -228,11 +240,13 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
         previousSelection.modelSpec !== newSelection.modelSpec;
       
       if (hasChanged) {
-        setSelectedModelInfo({
-          modelName: endpoint.label,
-          endpointName: endpoint.value,
-        });
-        setModelInfoModalOpen(true);
+        // Try to find a matching spec for this endpoint
+        const matchingSpec = findMatchingSpec(endpoint.value);
+        setSelectedModelSpec(matchingSpec);
+        // Only show modal if spec has modalInfo
+        if (matchingSpec?.modalInfo) {
+          setModelInfoModalOpen(true);
+        }
         setPreviousSelection(newSelection);
       }
       
@@ -268,19 +282,13 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       previousSelection.modelSpec !== newSelection.modelSpec;
     
     if (hasChanged) {
-      // Get display name based on endpoint type
-      let modelDisplayName = model;
-      if (isAgentsEndpoint(endpoint.value) && endpoint.agentNames?.[model]) {
-        modelDisplayName = endpoint.agentNames[model];
-      } else if (isAssistantsEndpoint(endpoint.value) && endpoint.assistantNames?.[model]) {
-        modelDisplayName = endpoint.assistantNames[model];
+      // Try to find a matching spec for this endpoint + model combination
+      const matchingSpec = findMatchingSpec(endpoint.value, model);
+      setSelectedModelSpec(matchingSpec);
+      // Only show modal if spec has modalInfo
+      if (matchingSpec?.modalInfo) {
+        setModelInfoModalOpen(true);
       }
-      
-      setSelectedModelInfo({
-        modelName: modelDisplayName,
-        endpointName: endpoint.label,
-      });
-      setModelInfoModalOpen(true);
       setPreviousSelection(newSelection);
     }
     
@@ -311,7 +319,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     // Model Info Modal
     modelInfoModalOpen,
     setModelInfoModalOpen,
-    selectedModelInfo,
+    selectedModelSpec,
     // Dialog
     ...keyProps,
   };
