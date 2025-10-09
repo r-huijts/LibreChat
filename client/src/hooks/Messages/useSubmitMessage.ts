@@ -4,6 +4,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { Constants, replaceSpecialVars } from 'librechat-data-provider';
 import { useChatContext, useChatFormContext, useAddedChatContext } from '~/Providers';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { useGetStartupConfig } from '~/data-provider';
 import store from '~/store';
 
 const appendIndex = (index: number, value?: string) => {
@@ -16,18 +17,57 @@ const appendIndex = (index: number, value?: string) => {
 export default function useSubmitMessage() {
   const { user } = useAuthContext();
   const methods = useChatFormContext();
-  const { ask, index, getMessages, setMessages, latestMessage } = useChatContext();
+  const { ask, index, getMessages, setMessages, latestMessage, conversation } = useChatContext();
   const { addedIndex, ask: askAdditional, conversation: addedConvo } = useAddedChatContext();
+  const { data: startupConfig } = useGetStartupConfig();
+  const modelSpecs = startupConfig?.modelSpecs?.list ?? [];
 
   const autoSendPrompts = useRecoilValue(store.autoSendPrompts);
   const activeConvos = useRecoilValue(store.allConversationsSelector);
   const setActivePrompt = useSetRecoilState(store.activePromptByIndex(index));
+
+  // Helper to check model consent
+  const checkModelConsent = useCallback((convo: any) => {
+    if (!convo) return true;
+    
+    const currentSpec = modelSpecs.find(spec => 
+      spec.preset.endpoint === convo.endpoint && 
+      spec.preset.model === convo.model
+    );
+    
+    if (currentSpec?.modalInfo && currentSpec?.name) {
+      const hasConsent = localStorage.getItem(`model-acceptance-${currentSpec.name}`);
+      if (!hasConsent) {
+        // Pass the specific model spec that needs consent
+        window.dispatchEvent(new CustomEvent('review-model-terms', {
+          detail: { modelSpec: currentSpec }
+        }));
+        console.warn(`Cannot send message: consent required for ${currentSpec.label || currentSpec.name}`);
+        return false;
+      }
+    }
+    
+    return true;
+  }, [modelSpecs]);
 
   const submitMessage = useCallback(
     (data?: { text: string }) => {
       if (!data) {
         return console.warn('No data provided to submitMessage');
       }
+      
+      // PRE-FLIGHT CONSENT CHECK
+      // Check root conversation consent
+      if (!checkModelConsent(conversation)) {
+        return; // Block submission
+      }
+      
+      // Check added conversation consent if it exists
+      const hasAddedConvo = addedIndex && activeConvos[addedIndex] && addedConvo;
+      if (hasAddedConvo && !checkModelConsent(addedConvo)) {
+        return; // Block submission
+      }
+      
       const rootMessages = getMessages();
       const isLatestInRootMessages = rootMessages?.some(
         (message) => message.messageId === latestMessage?.messageId,
@@ -76,6 +116,8 @@ export default function useSubmitMessage() {
       activeConvos,
       askAdditional,
       latestMessage,
+      conversation,
+      checkModelConsent,
     ],
   );
 

@@ -45,9 +45,12 @@ function ModelSelectorContent() {
 
   // Listen for header review action
   React.useEffect(() => {
-    const handler = () => {
-      if (currentSpec) {
-        setSelectedModelSpec(currentSpec);
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent<{ modelSpec?: any }>;
+      const specToReview = customEvent.detail?.modelSpec || currentSpec;
+      
+      if (specToReview) {
+        setSelectedModelSpec(specToReview);
         setModelInfoModalOpen(true);
       }
     };

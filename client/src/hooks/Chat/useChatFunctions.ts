@@ -116,8 +116,10 @@ export default function useChatFunctions({
     if (currentSpec?.modalInfo && currentSpec?.name) {
       const hasConsent = localStorage.getItem(`model-acceptance-${currentSpec.name}`);
       if (!hasConsent) {
-        // Open the modal instead of sending message
-        window.dispatchEvent(new CustomEvent('review-model-terms'));
+        // Pass the specific model spec
+        window.dispatchEvent(new CustomEvent('review-model-terms', {
+          detail: { modelSpec: currentSpec }
+        }));
         console.warn('Cannot send message: consent required for this model');
         return;
       }
