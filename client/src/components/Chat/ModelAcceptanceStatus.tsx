@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IdCard } from 'lucide-react';
+import { Lock, Unlock } from 'lucide-react';
 
 interface ModelAcceptanceStatusProps {
   modelName: string;
@@ -40,20 +40,24 @@ export function ModelAcceptanceStatus({ modelName, modelLabel, onReview }: Model
   // Always render, but style changes based on acceptance
   const baseClasses = "flex items-center justify-center rounded-lg border-2 p-2 transition-all";
   const acceptedClasses = "border-green-500 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-600 dark:border-green-600 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50";
-  const pendingClasses = "border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800/30 dark:text-gray-400 dark:hover:bg-gray-800/50";
+  const pendingClasses = "border-red-500 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-600 dark:border-red-600 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50";
   
   const title = hasAcceptance 
-    ? `✓ Terms accepted for ${modelLabel} on ${new Date(acceptedAt).toLocaleDateString()}\n\nClick to review or retract consent`
-    : `⚠ Terms not accepted for ${modelLabel}\n\nClick to review and accept terms to use this model`;
+    ? `🔓 Model unlocked for ${modelLabel} (accepted on ${new Date(acceptedAt).toLocaleDateString()})\n\nClick to review or retract consent`
+    : `🔒 Model locked for ${modelLabel}\n\nClick to review and accept terms to unlock this model`;
   
   return (
     <button
       onClick={onReview}
       className={`${baseClasses} ${hasAcceptance ? acceptedClasses : pendingClasses}`}
       title={title}
-      aria-label={hasAcceptance ? `Terms accepted for ${modelLabel} - Click to review` : `Terms pending for ${modelLabel} - Click to accept`}
+      aria-label={hasAcceptance ? `Model unlocked for ${modelLabel} - Click to review` : `Model locked for ${modelLabel} - Click to unlock`}
     >
-      <IdCard className="h-5 w-5" />
+      {hasAcceptance ? (
+        <Unlock className="h-5 w-5" />
+      ) : (
+        <Lock className="h-5 w-5" />
+      )}
     </button>
   );
 }
