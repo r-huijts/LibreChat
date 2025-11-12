@@ -10,7 +10,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ command }) => ({
   base: '',
   server: {
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 3090,
     strictPort: false,
     proxy: {
