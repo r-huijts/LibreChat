@@ -24,6 +24,8 @@ export type TModelModalInfo = {
   intendedUse?: string;
   warnings?: TModelWarning[];
   costInfo?: TModelCostInfo;
+  costLevel?: 'low' | 'medium' | 'high';
+  countryCode?: string;
   modelCardUrl?: string;
   requireAcknowledgment?: boolean;
 };
@@ -58,6 +60,8 @@ const modelModalInfoSchema = z.object({
   intendedUse: z.string().optional(),
   warnings: z.array(modelWarningSchema).optional(),
   costInfo: modelCostInfoSchema.optional(),
+  costLevel: z.enum(['low', 'medium', 'high']).optional(),
+  countryCode: z.string().length(2).optional(),
   modelCardUrl: z.string().optional(),
   requireAcknowledgment: z.boolean().optional(),
 });

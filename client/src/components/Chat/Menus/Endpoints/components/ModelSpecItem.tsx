@@ -2,6 +2,8 @@ import React from 'react';
 import type { TModelSpec } from 'librechat-data-provider';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
 import { useModelSelectorContext } from '../ModelSelectorContext';
+import { CostIndicator } from './CostIndicator';
+import { CountryFlag } from './CountryFlag';
 import SpecIcon from './SpecIcon';
 import { cn } from '~/utils';
 
@@ -12,31 +14,33 @@ interface ModelSpecItemProps {
 
 export function ModelSpecItem({ spec, isSelected }: ModelSpecItemProps) {
   const { handleSelectSpec, endpointsConfig } = useModelSelectorContext();
-  const { showIconInMenu = true } = spec;
+  const { showIconInMenu = true, modalInfo } = spec;
   return (
     <MenuItem
       key={spec.name}
       onClick={() => handleSelectSpec(spec)}
-      className={cn(
-        'flex w-full cursor-pointer items-center justify-between rounded-lg px-2 text-sm',
-      )}
+      className={cn('flex w-full cursor-pointer items-center rounded-lg px-2 text-sm')}
     >
-      <div
-        className={cn(
-          'flex w-full min-w-0 gap-2 px-1 py-1',
-          spec.description ? 'items-start' : 'items-center',
-        )}
-      >
-        {showIconInMenu && (
-          <div className="flex-shrink-0">
-            <SpecIcon currentSpec={spec} endpointsConfig={endpointsConfig} />
-          </div>
-        )}
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="truncate text-left">{spec.label}</span>
-          {spec.description && (
-            <span className="break-words text-xs font-normal">{spec.description}</span>
+      <div className="flex w-full min-w-0 items-center px-1 py-1">
+        {/* Left side: Icon and text */}
+        <div className="flex min-w-0 flex-1 gap-2">
+          {showIconInMenu && (
+            <div className="flex-shrink-0 pt-0.5">
+              <SpecIcon currentSpec={spec} endpointsConfig={endpointsConfig} />
+            </div>
           )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-left">{spec.label}</span>
+            {spec.description && (
+              <span className="break-words text-xs font-normal">{spec.description}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Right side: Flag and cost indicators */}
+        <div className="ml-4 flex min-w-[4.5rem] items-center justify-end gap-2 self-stretch">
+          <CountryFlag countryCode={modalInfo?.countryCode} size="sm" />
+          <CostIndicator costLevel={modalInfo?.costLevel} size="sm" />
         </div>
       </div>
       {isSelected && (

@@ -108,9 +108,9 @@ interface:
 
 # Example Registration Object Structure (optional)
 registration:
-  socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
-  # allowedDomains:
-  # - "gmail.com"
+  #socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
+  allowedDomains:
+   - "fontys.nl"
 
 # Example Balance settings
 # balance:
@@ -400,12 +400,14 @@ modelSpecs:
     # Mistral Medium via Azure AI
     - name: "portkey-mistral-medium"
       label: "Mistral Medium "
-      description: "High-performance model via Azure AI infrastructure"
+      description: "Balanced French model for multilingual reasoning, code completion, and enterprise knowledge work."
       preset:
         endpoint: "Portkey"
         model: "mistral-medium"
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
+        costLevel: "medium"
+        countryCode: "FR"
         intendedUse: "Mistral Medium is a high-performance model optimized for complex reasoning, code generation, and multilingual tasks. Best for professional use cases requiring strong analytical capabilities."
         modelCardUrl: "https://docs.mistral.ai/models/medium"
         requireAcknowledgment: false # Informational only
@@ -413,12 +415,14 @@ modelSpecs:
     # Gemini 2.5 Flash Image Preview via OpenRouter
     - name: "portkey-gemini-2.5-flash-image-preview"
       label: "Gemini 2.5 Flash Image Preview "
-      description: "Multimodal model with image analysis capabilities"
+      description: "Fast image generation and editing model"
       preset:
         endpoint: "Portkey"
         model: "gemini-2.5-flash-image-preview"
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
+        costLevel: "low"
+        countryCode: "US"
         intendedUse: "Gemini 2.5 Flash Image Preview excels at multimodal tasks including image analysis, document understanding, and visual content generation. Ideal for applications requiring both text and image processing."
         
         warnings:
@@ -433,12 +437,14 @@ modelSpecs:
     # GPT-5 Mini via Azure OpenAI
     - name: "portkey-gpt-5-mini"
       label: "GPT-5 Mini "
-      description: "Latest GPT-5 model optimized for efficiency"
+      description: "Powerfull model for general-purpose tasks requiring fast responses."
       preset:
         endpoint: "Portkey"
         model: "gpt-5-mini"
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
+        costLevel: "low"
+        countryCode: "SE"
         intendedUse: "GPT-5 Mini is the latest generation model optimized for speed and cost-efficiency while maintaining high-quality outputs. Best for general-purpose tasks requiring fast responses."
         
         warnings:
@@ -457,12 +463,14 @@ modelSpecs:
     # Green-R via GreenPT
     - name: "portkey-green-r"
       label: "Green-R "
-      description: "Specialized model for specific use cases"
+      description: "France-hosted all-purpose model powered by green energy."
       preset:
         endpoint: "Portkey"
         model: "green-r"
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
+        costLevel: "medium"
+        countryCode: "FR"
         intendedUse: "Green-R is a specialized model with unique capabilities. Review the model documentation to understand its specific strengths and use cases."
         
         warnings:
@@ -483,6 +491,8 @@ modelSpecs:
         model: "claude-sonnet-4"
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
+        costLevel: "high"
+        countryCode: "US"
         intendedUse: "Claude Sonnet 4 is designed for complex research document analysis requiring long context (200K tokens), multi-step reasoning tasks requiring sophisticated logic chains, technical documentation synthesis across multiple sources, and advanced code generation and review."
         
         warnings:

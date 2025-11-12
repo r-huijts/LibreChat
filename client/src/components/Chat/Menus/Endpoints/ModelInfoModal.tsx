@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { OGDialog, DialogTemplate } from '@librechat/client';
 import type { TModelSpec } from 'librechat-data-provider';
+import { CostIndicator } from './components/CostIndicator';
+import { CountryFlag } from './components/CountryFlag';
 import { useLocalize } from '~/hooks';
 
 interface ModelInfoModalProps {
@@ -149,7 +151,13 @@ const ModelInfoModal = ({
   return (
     <OGDialog open={open} onOpenChange={handleCancel}>
       <DialogTemplate
-        title={`Before using ${getDisplayName()}`}
+        title={
+          <div className="flex items-center gap-3">
+            <span>{`Before using ${getDisplayName()}`}</span>
+            <CountryFlag countryCode={modalInfo?.countryCode} size="md" />
+            <CostIndicator costLevel={modalInfo?.costLevel} size="md" />
+          </div>
+        }
         className="w-11/12 max-w-4xl sm:w-11/12 md:w-5/6 lg:w-4/5"
         showCloseButton={false}
         showCancelButton={false}
