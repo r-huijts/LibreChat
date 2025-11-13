@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Lock, Unlock } from 'lucide-react';
+import { useAuthContext } from '~/hooks/AuthContext';
 
 interface ModelAcceptanceStatusProps {
   modelName: string;
@@ -8,34 +9,20 @@ interface ModelAcceptanceStatusProps {
 }
 
 export function ModelAcceptanceStatus({ modelName, modelLabel, onReview }: ModelAcceptanceStatusProps) {
-  const [acceptance, setAcceptance] = useState(() => 
-    localStorage.getItem(`model-acceptance-${modelName}`)
-  );
+  const { user } = useAuthContext();
   
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setAcceptance(localStorage.getItem(`model-acceptance-${modelName}`));
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [modelName]);
-
-  // Update acceptance state when modelName changes
-  useEffect(() => {
-    setAcceptance(localStorage.getItem(`model-acceptance-${modelName}`));
-  }, [modelName]);
-  
-  const hasAcceptance = !!acceptance;
-  
-  let acceptedAt = null;
-  if (hasAcceptance) {
-    try {
-      acceptedAt = JSON.parse(acceptance).acceptedAt;
-    } catch (error) {
-      // corrupted data
+  // Get consent info from user object
+  const consentInfo = useMemo(() => {
+    if (!user?.modelConsents) {
+      return null;
     }
-  }
+    return user.modelConsents.find(
+      (consent) => consent.modelName === modelName && !consent.revokedAt,
+    );
+  }, [modelName, user?.modelConsents]);
+  
+  const hasAcceptance = !!consentInfo;
+  const acceptedAt = consentInfo?.acceptedAt;
   
   // Always render, but style changes based on acceptance
   const baseClasses = "flex items-center justify-center rounded-lg border-2 p-2 transition-all";

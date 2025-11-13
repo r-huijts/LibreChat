@@ -381,3 +381,10 @@ export const getEffectivePermissions = (resourceType: ResourceType, resourceId: 
 // SharePoint Graph API Token
 export const graphToken = (scopes: string) =>
   `${BASE_URL}/api/auth/graph-token?scopes=${encodeURIComponent(scopes)}`;
+
+/* Model Consents */
+export const modelConsents = () => `${BASE_URL}/api/model-consents`;
+export const revokeModelConsent = (modelName: string) =>
+  `${modelConsents()}/${encodeURIComponent(modelName)}`;
+export const modelConsentsByModel = (modelName: string) =>
+  `${modelConsents()}/model/${encodeURIComponent(modelName)}`;

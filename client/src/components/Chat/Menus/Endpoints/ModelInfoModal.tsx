@@ -4,6 +4,11 @@ import type { TModelSpec } from 'librechat-data-provider';
 import { CostIndicator } from './components/CostIndicator';
 import { CountryFlag } from './components/CountryFlag';
 import { useLocalize } from '~/hooks';
+import {
+  useAcceptModelConsentMutation,
+  useRevokeModelConsentMutation,
+} from '~/data-provider';
+import { useAuthContext } from '~/hooks/AuthContext';
 
 interface ModelInfoModalProps {
   open: boolean;
@@ -21,11 +26,24 @@ const ModelInfoModal = ({
   endpointName,
 }: ModelInfoModalProps) => {
   const localize = useLocalize();
+  const { user } = useAuthContext();
+  const acceptMutation = useAcceptModelConsentMutation();
+  const revokeMutation = useRevokeModelConsentMutation();
 
   // Extract modal info from modelSpec
   const modalInfo = modelSpec?.modalInfo;
   const hasModalInfo = !!modalInfo;
   const requireAcknowledgment = modalInfo?.requireAcknowledgment !== false; // Default to true
+  
+  // Check if user has consent from user object
+  const hasAccepted = useMemo(() => {
+    if (!modelSpec?.name || !user?.modelConsents) {
+      return false;
+    }
+    return user.modelConsents.some(
+      (consent) => consent.modelName === modelSpec.name && !consent.revokedAt,
+    );
+  }, [modelSpec?.name, user?.modelConsents]);
   
   // Build acknowledgment state from warnings + costInfo
   const acknowledgmentKeys = useMemo(() => {
@@ -39,10 +57,9 @@ const ModelInfoModal = ({
 
   const initialAcknowledgments = useMemo(() => {
     const acks: Record<string, boolean> = {};
-    const hasAccepted = modelSpec?.name && localStorage.getItem(`model-acceptance-${modelSpec.name}`);
     acknowledgmentKeys.forEach(key => acks[key] = hasAccepted ? true : false);
     return acks;
-  }, [acknowledgmentKeys, modelSpec?.name]);
+  }, [acknowledgmentKeys, hasAccepted]);
 
   const [acknowledgments, setAcknowledgments] = useState(initialAcknowledgments);
 
@@ -66,34 +83,29 @@ const ModelInfoModal = ({
   const handleAccept = () => {
     if (requireAcknowledgment && !allAcknowledged) return;
     
-    // Store acceptance in localStorage
+    // Store acceptance via API
     if (modelSpec?.name) {
-      const acceptanceKey = `model-acceptance-${modelSpec.name}`;
-      localStorage.setItem(acceptanceKey, JSON.stringify({
+      acceptMutation.mutate({
         modelName: modelSpec.name,
         modelLabel: modelSpec.label,
-        acceptedAt: new Date().toISOString(),
-      }));
+      });
     }
     
     // Reset acknowledgments for next time
     setAcknowledgments(initialAcknowledgments);
     onOpenChange(false);
-    // Force badge re-render by dispatching storage event
+    // Fire event for any components still listening
     window.dispatchEvent(new Event('storage'));
   };
 
   const handleRetractConsent = () => {
     if (modelSpec?.name) {
-      localStorage.removeItem(`model-acceptance-${modelSpec.name}`);
+      revokeMutation.mutate(modelSpec.name);
     }
     onOpenChange(false);
-    // Force badge re-render by dispatching storage event
+    // Fire event for any components still listening
     window.dispatchEvent(new Event('storage'));
   };
-
-  // Check if user has already accepted terms for this model
-  const hasAcceptance = modelSpec?.name && localStorage.getItem(`model-acceptance-${modelSpec.name}`);
 
   const handleCancel = () => {
     // Reset acknowledgments
@@ -204,8 +216,8 @@ const ModelInfoModal = ({
                                 type="checkbox"
                                 checked={acknowledgments[checkboxKey] || false}
                                 onChange={() => handleCheckboxChange(checkboxKey)}
-                                disabled={!!hasAcceptance}
-                                className={`mt-0.5 h-4 w-4 cursor-pointer rounded ${colors.checkbox} ${hasAcceptance ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                disabled={!!hasAccepted}
+                                className={`mt-0.5 h-4 w-4 cursor-pointer rounded ${colors.checkbox} ${hasAccepted ? 'opacity-60 cursor-not-allowed' : ''}`}
                               />
                               <span className={`text-sm font-medium ${colors.title}`}>
                                 {warning.acknowledgment}
@@ -234,7 +246,7 @@ const ModelInfoModal = ({
                         type="checkbox"
                         checked={acknowledgments.costInfo || false}
                         onChange={() => handleCheckboxChange('costInfo')}
-                        disabled={!!hasAcceptance}
+                        disabled={!!hasAccepted}
                         className="mt-0.5 h-4 w-4 cursor-pointer rounded border-blue-400 text-blue-600 focus:ring-blue-500 dark:border-blue-600"
                       />
                       <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -263,7 +275,7 @@ const ModelInfoModal = ({
             >
               Cancel
             </button>
-            {hasAcceptance ? (
+            {hasAccepted ? (
               <button
                 onClick={handleRetractConsent}
                 className="inline-flex h-10 items-center justify-center rounded-lg bg-red-500 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 focus:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"

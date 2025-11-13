@@ -60,5 +60,12 @@ module.exports = {
   savePreset,
   deletePresets,
 
+  // Model consent methods from ...methods
+  getUserConsents: methods.getUserConsents,
+  acceptModelConsent: methods.acceptModelConsent,
+  revokeModelConsent: methods.revokeModelConsent,
+  getModelConsents: methods.getModelConsents,
+  hasModelConsent: methods.hasModelConsent,
+
   Files: File,
 };

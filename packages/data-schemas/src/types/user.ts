@@ -1,6 +1,13 @@
 import type { Document, Types } from 'mongoose';
 import { CursorPaginationParams } from '~/common';
 
+export interface IUserModelConsent {
+  modelName: string;
+  modelLabel?: string;
+  acceptedAt: Date;
+  revokedAt?: Date | null;
+}
+
 export interface IUser extends Document {
   name?: string;
   username?: string;
@@ -34,6 +41,7 @@ export interface IUser extends Document {
   personalization?: {
     memories?: boolean;
   };
+  modelConsents?: IUserModelConsent[];
   createdAt?: Date;
   updatedAt?: Date;
   /** Field for external source identification (for consistency with TPrincipal schema) */
@@ -66,6 +74,7 @@ export interface UpdateUserRequest {
   personalization?: {
     memories?: boolean;
   };
+  modelConsents?: IUserModelConsent[];
 }
 
 export interface UserDeleteResult {

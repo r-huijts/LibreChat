@@ -25,5 +25,7 @@ export * from './prompts';
 export * from './accessRole';
 export * from './aclEntry';
 export * from './group';
+/* Model Consents */
+export * from './modelConsent';
 /* Web */
 export * from './web';

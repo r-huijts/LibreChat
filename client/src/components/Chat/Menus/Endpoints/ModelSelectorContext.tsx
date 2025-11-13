@@ -14,6 +14,7 @@ import { useGetEndpointsQuery, useListAgentsQuery } from '~/data-provider';
 import { useModelSelectorChatContext } from './ModelSelectorChatContext';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { filterItems } from './utils';
+import { useAuthContext } from '~/hooks/AuthContext';
 
 type ModelSelectorContextType = {
   // State
@@ -59,11 +60,19 @@ interface ModelSelectorProviderProps {
 }
 
 export function ModelSelectorProvider({ children, startupConfig }: ModelSelectorProviderProps) {
+  const { user } = useAuthContext();
   const agentsMap = useAgentsMapContext();
   const assistantsMap = useAssistantsMapContext();
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const { endpoint, model, spec, agent_id, assistant_id, newConversation } =
     useModelSelectorChatContext();
+  
+  // Helper to check if user has consent for a model
+  const hasModelConsent = (modelName: string) => {
+    return user?.modelConsents?.some(
+      (consent) => consent.modelName === modelName && !consent.revokedAt,
+    );
+  };
   const modelSpecs = useMemo(() => {
     const specs = startupConfig?.modelSpecs?.list ?? [];
     if (!agentsMap) {
@@ -133,7 +142,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     // Only run when selectedValues are populated and we haven't shown the initial modal yet
     if (selectedValues.endpoint && selectedValues.model && !hasShownInitialModal.current) {
       const matchingSpec = findMatchingSpec(selectedValues.endpoint, selectedValues.model);
-      const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+      const hasAcceptance = matchingSpec?.name && hasModelConsent(matchingSpec.name);
 
       if (matchingSpec?.modalInfo && !hasAcceptance) {
         setSelectedModelSpec(matchingSpec);
@@ -229,7 +238,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       // Use the spec directly since we already have it
       setSelectedModelSpec(spec);
       // Only show modal if spec has modalInfo and not already acknowledged
-      const hasAcceptance = spec.name && localStorage.getItem(`model-acceptance-${spec.name}`);
+      const hasAcceptance = spec.name && hasModelConsent(spec.name);
       if (spec.modalInfo && !hasAcceptance) {
         setModelInfoModalOpen(true);
       }
@@ -262,7 +271,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
         const matchingSpec = findMatchingSpec(endpoint.value);
         setSelectedModelSpec(matchingSpec);
         // Only show modal if spec has modalInfo and not already acknowledged
-        const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+        const hasAcceptance = matchingSpec?.name && hasModelConsent(matchingSpec.name);
         if (matchingSpec?.modalInfo && !hasAcceptance) {
           setModelInfoModalOpen(true);
         }
@@ -305,7 +314,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       const matchingSpec = findMatchingSpec(endpoint.value, model);
       setSelectedModelSpec(matchingSpec);
       // Only show modal if spec has modalInfo and not already acknowledged
-      const hasAcceptance = matchingSpec?.name && localStorage.getItem(`model-acceptance-${matchingSpec.name}`);
+      const hasAcceptance = matchingSpec?.name && hasModelConsent(matchingSpec.name);
       if (matchingSpec?.modalInfo && !hasAcceptance) {
         setModelInfoModalOpen(true);
       }

@@ -36,7 +36,10 @@ export default function useSubmitMessage() {
     );
     
     if (currentSpec?.modalInfo && currentSpec?.name) {
-      const hasConsent = localStorage.getItem(`model-acceptance-${currentSpec.name}`);
+      // Check user's modelConsents from user object
+      const hasConsent = user?.modelConsents?.some(
+        (consent) => consent.modelName === currentSpec.name && !consent.revokedAt,
+      );
       if (!hasConsent) {
         // Pass the specific model spec that needs consent
         window.dispatchEvent(new CustomEvent('review-model-terms', {
@@ -48,7 +51,7 @@ export default function useSubmitMessage() {
     }
     
     return true;
-  }, [modelSpecs]);
+  }, [modelSpecs, user?.modelConsents]);
 
   const submitMessage = useCallback(
     (data?: { text: string }) => {

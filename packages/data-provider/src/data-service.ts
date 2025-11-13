@@ -962,3 +962,16 @@ export function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTok
 export function getDomainServerBaseUrl(): string {
   return `${endpoints.apiBaseUrl()}/api`;
 }
+
+/* Model Consents */
+export const getModelConsents = (includeRevoked = false): Promise<t.TModelConsentsResponse> => {
+  return request.get(`${endpoints.modelConsents()}?includeRevoked=${includeRevoked}`);
+};
+
+export const acceptModelConsent = (payload: t.TAcceptModelConsent): Promise<t.TModelConsentResponse> => {
+  return request.post(endpoints.modelConsents(), payload);
+};
+
+export const revokeModelConsent = (modelName: string): Promise<{ message: string }> => {
+  return request.delete(endpoints.revokeModelConsent(modelName));
+};

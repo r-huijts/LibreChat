@@ -23,6 +23,17 @@ const BackupCodeSchema = new Schema(
   { _id: false },
 );
 
+// Model consent sub-schema
+const ModelConsentSchema = new Schema(
+  {
+    modelName: { type: String, required: true },
+    modelLabel: { type: String, default: '' },
+    acceptedAt: { type: Date, required: true, default: Date.now },
+    revokedAt: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
 const userSchema = new Schema<IUser>(
   {
     name: {
@@ -140,6 +151,10 @@ const userSchema = new Schema<IUser>(
         },
       },
       default: {},
+    },
+    modelConsents: {
+      type: [ModelConsentSchema],
+      default: [],
     },
     /** Field for external source identification (for consistency with TPrincipal schema) */
     idOnTheSource: {

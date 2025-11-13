@@ -114,7 +114,10 @@ export default function useChatFunctions({
     );
 
     if (currentSpec?.modalInfo && currentSpec?.name) {
-      const hasConsent = localStorage.getItem(`model-acceptance-${currentSpec.name}`);
+      // Check user's modelConsents from user object
+      const hasConsent = user?.modelConsents?.some(
+        (consent) => consent.modelName === currentSpec.name && !consent.revokedAt,
+      );
       if (!hasConsent) {
         // Pass the specific model spec
         window.dispatchEvent(new CustomEvent('review-model-terms', {

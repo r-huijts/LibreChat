@@ -189,6 +189,13 @@ export type TBackupCode = {
   usedAt: Date | null;
 };
 
+export type TModelConsent = {
+  modelName: string;
+  modelLabel?: string;
+  acceptedAt: string;
+  revokedAt?: string | null;
+};
+
 export type TUser = {
   id: string;
   username: string;
@@ -203,6 +210,7 @@ export type TUser = {
   personalization?: {
     memories?: boolean;
   };
+  modelConsents?: TModelConsent[];
   createdAt: string;
   updatedAt: string;
 };
@@ -652,4 +660,28 @@ export type TBalanceResponse = {
   refillIntervalUnit?: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
   lastRefill?: Date;
   refillAmount?: number;
+};
+
+export type TAcceptModelConsent = {
+  modelName: string;
+  modelLabel?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type TModelConsentResponse = {
+  consent: TModelConsent & {
+    _id: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+};
+
+export type TModelConsentsResponse = {
+  consents: Array<TModelConsent & {
+    _id: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 };

@@ -14,3 +14,5 @@ export * from './queries';
 export * from './mcp';
 export * from './roles';
 export * from './tags';
+/* Model Consents */
+export * from './ModelConsents';
