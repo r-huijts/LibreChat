@@ -9,7 +9,7 @@ Use this checklist to verify your SearXNG integration is working correctly.
 # Verify all required files are in place
 [ -f "searxng/settings.yml" ] && echo "✅ settings.yml" || echo "❌ settings.yml missing"
 [ -f "searxng/README.md" ] && echo "✅ README.md" || echo "❌ README.md missing"
-[ -f "SEARXNG_SETUP.md" ] && echo "✅ SEARXNG_SETUP.md" || echo "❌ SEARXNG_SETUP.md missing"
+[ -f "docs/SEARXNG_SETUP.md" ] && echo "✅ SEARXNG_SETUP.md" || echo "❌ SEARXNG_SETUP.md missing"
 ```
 
 ### 2. Configuration Files Updated
@@ -18,13 +18,6 @@ Use this checklist to verify your SearXNG integration is working correctly.
 grep -q "searxng:" docker-compose.override.yml && echo "✅ override.yml" || echo "❌ override.yml"
 grep -q "searxng:" deploy-compose.yml && echo "✅ deploy-compose.yml" || echo "❌ deploy-compose.yml"
 grep -q "searxng:" .devcontainer/docker-compose.yml && echo "✅ devcontainer compose" || echo "❌ devcontainer compose"
-```
-
-### 3. Environment Variables
-```bash
-# Check .env.example has SEARXNG vars
-grep -q "SEARXNG_INSTANCE_URL" .env.example && echo "✅ SEARXNG_INSTANCE_URL" || echo "❌ Missing"
-grep -q "SEARXNG_API_KEY" .env.example && echo "✅ SEARXNG_API_KEY" || echo "❌ Missing"
 ```
 
 ## 🚀 Development Testing
@@ -76,6 +69,25 @@ docker logs searxng --tail 20
 docker exec devcontainer-app-1 curl -s http://searxng:8080/search?q=test&format=json | head -c 200
 
 # Should return JSON (verifies container-to-container networking)
+```
+
+### 6. Register MCP Server
+```bash
+# Ensure your MCP config includes the searxng server
+cat <<'YAML'
+mcpServers:
+  searxng:
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-searxng"
+    env:
+      SEARXNG_URL: "http://searxng:8080"
+YAML
+```
+
+```bash
+# If the MCP server runs outside Docker, point SEARXNG_URL to http://localhost:8080
 ```
 
 ## 🔧 Configuration Testing
@@ -209,8 +221,7 @@ Your SearXNG integration is complete when:
 - [ ] ✅ Settings.yml is loaded correctly
 - [ ] ✅ No errors in docker logs
 - [ ] ✅ Production secret_key is changed
-- [ ] ✅ MCP server can connect (optional)
-- [ ] ✅ LibreChat can use searxng endpoint (optional)
+- [ ] ✅ MCP server can connect
 
 ## 📚 Additional Resources
 

@@ -33,8 +33,6 @@ services:
       - MEILI_HOST=http://meilisearch:7700
       - LIBRECHAT_CODE_BASEURL=http://code-interpreter-proxy:8000
       - LIBRECHAT_CODE_API_KEY=${LIBRECHAT_CODE_API_KEY:-dev-ci-key}
-      - SEARXNG_INSTANCE_URL=${SEARXNG_INSTANCE_URL:-http://searxng:8080}
-      - SEARXNG_API_KEY=${SEARXNG_API_KEY}
 
     # Runs app on the same network as the service container, allows "forwardPorts" in devcontainer.json function.
     # network_mode: service:another-service

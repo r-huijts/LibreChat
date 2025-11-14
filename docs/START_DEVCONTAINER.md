@@ -252,27 +252,17 @@ The devcontainer uses settings from `.env`:
 - `ALLOW_UNVERIFIED_EMAIL_LOGIN=true` - No email verification needed
 - `MONGO_URI=mongodb://mongodb:27017/LibreChat`
 - `MEILI_HOST=http://meilisearch:7700`
-- `SEARXNG_INSTANCE_URL=http://searxng:8080` - SearXNG search endpoint
-- `SEARXNG_API_KEY=` - Optional API key for SearXNG
 
 To modify settings, edit `.env` and restart the backend (Step 4).
 
-### Enabling SearXNG Web Search
+### Using SearXNG via MCP
 
 1. Ensure SearXNG container is running (started automatically in Step 2)
 2. Verify it's accessible:
    ```bash
    curl http://localhost:8080/search?q=test&format=json
    ```
-3. Configure in `librechat.yaml` by uncommenting the searxng section:
-   ```yaml
-   websearch:
-     providers:
-       searxng:
-         searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
-         searxngApiKey: '${SEARXNG_API_KEY}'
-   ```
-4. For MCP integration, see `searxng/README.md` for MCP server configuration
+3. Add the SearXNG MCP server to your LibreChat MCP configuration (see `searxng/README.md`)
 
 ## Summary
 

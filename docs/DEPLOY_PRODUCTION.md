@@ -207,11 +207,6 @@ MEILI_MASTER_KEY=<GENERATE_SECURE_KEY>
 RAG_PORT=8000
 RAG_API_URL=http://rag_api:8000
 
-# SearXNG Configuration (self-hosted search)
-SEARXNG_INSTANCE_URL=http://searxng:8080
-SEARXNG_API_KEY=
-SEARXNG_BASE_URL=http://localhost:8080/
-
 # Security Secrets - GENERATE SECURE RANDOM STRINGS
 SESSION_SECRET=<GENERATE_SECURE_SECRET>
 JWT_SECRET=<GENERATE_SECURE_SECRET>
@@ -287,6 +282,24 @@ Press Ctrl+C to exit logs when you see:
 ```
 Server listening on all interfaces at port 3080
 ```
+
+#### Step 15a: Wire the MCP Server
+```bash
+# On the host running your MCP tooling (can be outside Docker)
+# ensure the searxng server entry points to the internal container URL
+cat <<'YAML'
+mcpServers:
+  searxng:
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-searxng"
+    env:
+      SEARXNG_URL: "http://searxng:8080"
+YAML
+```
+
+If the MCP process runs on your laptop instead of inside Docker, change `SEARXNG_URL` to `http://localhost:8080`.
 
 #### Step 16: Verify Deployment
 ```bash

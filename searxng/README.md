@@ -21,38 +21,12 @@ The main configuration file is `settings.yml`. On first boot, SearXNG will use t
 
 - **engines**: Enable/disable specific search engines in the `engines` section
 
-## Usage with LibreChat
-
-The SearXNG instance is automatically configured when using `docker-compose.override.yml` or `deploy-compose.yml`.
-
-### Environment Variables
-
-Set these in your `.env` file:
-
-```bash
-SEARXNG_INSTANCE_URL=http://searxng:8080
-SEARXNG_API_KEY=  # Optional: if you enable authentication
-SEARXNG_BASE_URL=http://localhost:8080/
-```
-
-### Accessing SearXNG
+## Accessing SearXNG
 
 - **Internal (from containers)**: `http://searxng:8080`
 - **External (from host)**: `http://localhost:8080` (if ports are exposed)
 
-### Enabling in LibreChat
-
-Uncomment the searxng configuration in `librechat.yaml`:
-
-```yaml
-websearch:
-  providers:
-    searxng:
-      searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
-      searxngApiKey: '${SEARXNG_API_KEY}'
-```
-
-### Using with MCP Server
+## Using with MCP Server (Recommended)
 
 Configure the SearXNG MCP server in your LibreChat MCP configuration:
 
@@ -66,6 +40,8 @@ mcpServers:
     env:
       SEARXNG_URL: "http://searxng:8080"
 ```
+
+> ℹ️  The built-in LibreChat web search provider is **not** wired to this instance. All usage flows through the MCP server so you can manage prompts/tools per assistant.
 
 ## Customization
 

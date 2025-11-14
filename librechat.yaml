@@ -517,3 +517,12 @@ modelSpecs:
         
         modelCardUrl: "https://www.anthropic.com/claude"
         requireAcknowledgment: true
+
+mcpServers:
+  searxng:
+    command: npx
+    args: 
+      - -y 
+      - "mcp-searxng"
+    env:
+      SEARXNG_URL: "http://searxng:8080"

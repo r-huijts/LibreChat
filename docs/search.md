@@ -8,7 +8,7 @@ NOW we're talking! Building your own MCP servers? This is the way, Batman. Let m
 
 ### Already Integrated! 🎉
 
-SearXNG is now part of the LibreChat Docker architecture. Here's how to use it:
+SearXNG is now part of the LibreChat Docker architecture and is exposed **only** via the SearXNG MCP server. Here's how to use it:
 
 #### For Development (devcontainer)
 
@@ -23,16 +23,7 @@ SearXNG is now part of the LibreChat Docker architecture. Here's how to use it:
    curl http://localhost:8080/search?q=test&format=json
    ```
 
-3. **Configure in librechat.yaml** - Uncomment the searxng section:
-   ```yaml
-   websearch:
-     providers:
-       searxng:
-         searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
-         searxngApiKey: '${SEARXNG_API_KEY}'
-   ```
-
-4. **For MCP integration**, add to your MCP configuration:
+3. **Wire the MCP server** into your LibreChat MCP configuration:
    ```yaml
    mcpServers:
      searxng:
@@ -51,14 +42,7 @@ SearXNG is now part of the LibreChat Docker architecture. Here's how to use it:
    docker compose -f deploy-compose.yml up -d
    ```
 
-2. **Ensure env vars are set** in your `.env`:
-   ```bash
-   SEARXNG_INSTANCE_URL=http://searxng:8080
-   SEARXNG_API_KEY=
-   SEARXNG_BASE_URL=http://localhost:8080/
-   ```
-
-3. **Update searxng secret key** in `searxng/settings.yml`:
+2. **Update searxng secret key** in `searxng/settings.yml`:
    ```bash
    openssl rand -hex 32  # Generate secure key
    # Edit searxng/settings.yml and update secret_key

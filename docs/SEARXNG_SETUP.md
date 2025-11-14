@@ -2,7 +2,7 @@
 
 ## What Was Added
 
-SearXNG, a privacy-focused metasearch engine, has been integrated into your LibreChat Docker architecture following the same pattern as the code-interpreter-proxy.
+SearXNG, a privacy-focused metasearch engine, has been integrated into your LibreChat Docker architecture following the same pattern as the code-interpreter-proxy. This instance is intentionally exposed only through the SearXNG MCP server so the built-in LibreChat websearch module remains untouched.
 
 ## Files Modified
 
@@ -11,9 +11,8 @@ SearXNG, a privacy-focused metasearch engine, has been integrated into your Libr
 - **`deploy-compose.yml`** - Added searxng service for production
 
 ### Configuration Files
-- **`.env.example`** - Added SEARXNG environment variables
-- **`librechat.yaml`** - Already has searxng config (commented out)
-- **`librechat.example.yaml`** - Already has searxng config (commented out)
+- **`librechat.yaml`** - Already has a searxng config block (still commented out because builtin websearch stays disabled)
+- **`librechat.example.yaml`** - Same as above for reference
 
 ### Documentation
 - **`START_DEVCONTAINER.md`** - Added SearXNG startup instructions
@@ -42,20 +41,16 @@ SearXNG, a privacy-focused metasearch engine, has been integrated into your Libr
    curl http://localhost:8080/search?q=test&format=json
    ```
 
-3. **Add to your `.env`:**
-   ```bash
-   SEARXNG_INSTANCE_URL=http://searxng:8080
-   SEARXNG_API_KEY=
-   SEARXNG_BASE_URL=http://localhost:8080/
-   ```
-
-4. **Enable in `librechat.yaml`** (uncomment):
+3. **Register the MCP server** inside your LibreChat MCP configuration:
    ```yaml
-   websearch:
-     providers:
-       searxng:
-         searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
-         searxngApiKey: '${SEARXNG_API_KEY}'
+   mcpServers:
+     searxng:
+       command: npx
+       args:
+         - -y
+         - "@modelcontextprotocol/server-searxng"
+       env:
+         SEARXNG_URL: "http://searxng:8080"
    ```
 
 ### For Production
@@ -74,14 +69,7 @@ SearXNG, a privacy-focused metasearch engine, has been integrated into your Libr
    nano searxng/settings.yml
    ```
 
-3. **Add to production `.env`:**
-   ```bash
-   SEARXNG_INSTANCE_URL=http://searxng:8080
-   SEARXNG_API_KEY=
-   SEARXNG_BASE_URL=http://localhost:8080/
-   ```
-
-4. **Deploy:**
+3. **Deploy:**
    ```bash
    docker compose -f deploy-compose.yml up -d
    ```
@@ -120,15 +108,11 @@ To use SearXNG with the MCP (Model Context Protocol) server:
 ┌─────────────────────────────────────────────────────────┐
 │ LibreChat API Container                                 │
 │                                                         │
-│  Environment:                                           │
-│   SEARXNG_INSTANCE_URL=http://searxng:8080            │
-│   SEARXNG_API_KEY=                                     │
-│                                                         │
 │  Dependencies:                                          │
 │   - mongodb                                             │
 │   - rag_api                                             │
 │   - code-interpreter-proxy                              │
-│   - searxng  ← NEW                                      │
+│   - searxng  ← NEW (for MCP server usage)               │
 └─────────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -195,7 +179,7 @@ See `searxng/README.md` for detailed configuration options.
 SearXNG supports authentication. To enable:
 
 1. Configure authentication in `searxng/settings.yml`
-2. Set `SEARXNG_API_KEY` in your `.env`
+2. Pass `SEARXNG_API_KEY` to the MCP server environment (not LibreChat)
 3. Update the MCP configuration with the key
 
 ## Troubleshooting
@@ -239,15 +223,13 @@ docker compose -f deploy-compose.yml up -d --force-recreate searxng
 
 1. **Test the integration**: Start your devcontainer and verify SearXNG works
 2. **Configure engines**: Edit `searxng/settings.yml` to enable your preferred search engines
-3. **Enable in LibreChat**: Uncomment the searxng section in `librechat.yaml`
-4. **Set up MCP**: Configure the MCP server for agent-based web search
-5. **Deploy to production**: Follow `DEPLOY_PRODUCTION.md` with SearXNG included
+3. **Set up MCP**: Configure `@modelcontextprotocol/server-searxng` for agent-based web search
+4. **Deploy to production**: Follow `DEPLOY_PRODUCTION.md` with SearXNG included
 
 ## Resources
 
 - **SearXNG Documentation**: https://docs.searxng.org/
 - **MCP SearXNG Server**: https://github.com/modelcontextprotocol/servers/tree/main/src/searxng
-- **LibreChat Web Search Docs**: https://librechat.ai/docs/features/web_search
 - **Local Configuration**: See `searxng/README.md`
 
 ---

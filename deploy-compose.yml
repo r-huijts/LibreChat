@@ -11,7 +11,6 @@ services:
     depends_on:
       - mongodb
       - rag_api
-      - searxng
     restart: always
     extra_hosts:
     - "host.docker.internal:host-gateway"
@@ -24,8 +23,6 @@ services:
       - MEILI_HOST=http://meilisearch:7700
       - RAG_PORT=${RAG_PORT:-8000}
       - RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
-      - SEARXNG_INSTANCE_URL=${SEARXNG_INSTANCE_URL:-http://searxng:8080}
-      - SEARXNG_API_KEY=${SEARXNG_API_KEY}
     volumes:
       - type: bind
         source: ./librechat.yaml
