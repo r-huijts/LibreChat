@@ -9,11 +9,17 @@ services:
       - meilisearch
       - code-interpreter-proxy
       - searxng
+      - ocr-service
+      - vectordb
+      - rag_api
     depends_on:
       - mongodb
       - meilisearch
       - code-interpreter-proxy
       - searxng
+      - ocr-service
+      - vectordb
+      - rag_api
     ports:
       - 3080:3080  # Backend API
       - 3090:3090  # Frontend Dev Server
@@ -33,6 +39,7 @@ services:
       - MEILI_HOST=http://meilisearch:7700
       - LIBRECHAT_CODE_BASEURL=http://code-interpreter-proxy:8000
       - LIBRECHAT_CODE_API_KEY=${LIBRECHAT_CODE_API_KEY:-dev-ci-key}
+      - RAG_API_URL=http://rag_api:8000
 
     # Runs app on the same network as the service container, allows "forwardPorts" in devcontainer.json function.
     # network_mode: service:another-service
@@ -97,5 +104,49 @@ services:
     environment:
       - SEARXNG_BASE_URL=${SEARXNG_BASE_URL:-http://localhost:8080/}
 
+  ocr-service:
+    container_name: ocr-service
+    build:
+      context: ../ocr-service
+      dockerfile: Dockerfile
+    expose:
+      - 8000
+    environment:
+      - OCR_API_KEY=${OCR_API_KEY:-dev-ocr-key}
+      - OCR_ENGINE=tesseract
+      - OCR_STORAGE_BACKEND=memory
+      - OCR_LOG_LEVEL=INFO
+      - OCR_TESSERACT_LANG=eng
+      - OCR_MAX_FILE_SIZE_MB=10
+    volumes:
+      - ocr_files:/data/ocr
+
+  vectordb:
+    container_name: vectordb
+    image: pgvector/pgvector:0.8.0-pg15-trixie
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    expose:
+      - 5432
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+
+  rag_api:
+    container_name: rag_api
+    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    depends_on:
+      - vectordb
+    environment:
+      - DB_HOST=vectordb
+      - RAG_PORT=${RAG_PORT:-8000}
+    env_file:
+      - ../.env
+    expose:
+      - 8000
+
 volumes:
   code_interpreter_files:
+  ocr_files:
+  pgdata_dev:

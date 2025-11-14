@@ -9,6 +9,7 @@ services:
     depends_on:
       - mongodb
       - rag_api
+      - ocr-service
     image: ghcr.io/danny-avila/librechat-dev:latest
     restart: always
     user: "${UID}:${GID}"
@@ -67,6 +68,22 @@ services:
       - vectordb
     env_file:
       - .env
+  ocr-service:
+    container_name: ocr-service
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - OCR_API_KEY=${OCR_API_KEY:-dev-ocr-key}
+      - OCR_ENGINE=tesseract
+      - OCR_STORAGE_BACKEND=memory
+      - OCR_LOG_LEVEL=INFO
+      - OCR_TESSERACT_LANG=eng
+      - OCR_MAX_FILE_SIZE_MB=10
+    volumes:
+      - ocr_files:/data/ocr
 
 volumes:
   pgdata2:
+  ocr_files:

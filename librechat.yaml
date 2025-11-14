@@ -518,8 +518,14 @@ modelSpecs:
         modelCardUrl: "https://www.anthropic.com/claude"
         requireAcknowledgment: true
 
+# OCR Configuration
+ocr:
+  apiKey: "${OCR_API_KEY}"
+  baseURL: "http://ocr-service:8000/v1"
+  strategy: "custom_ocr"
+
 mcpServers:
-  searxng:
+  websearch:
     command: npx
     args: 
       - -y 
