@@ -131,6 +131,12 @@ class SandboxSessionWrapper:
             stdout = exec_result.stdout or ""
             if PLOT_SETUP_MESSAGE in stdout:
                 stdout = stdout.replace(PLOT_SETUP_MESSAGE, "").lstrip("\n")
+            
+            # If stdout is empty but we have plots, provide a helpful message
+            if not stdout.strip() and exec_result.plots:
+                plot_count = len(exec_result.plots)
+                plot_word = "plot" if plot_count == 1 else "plots"
+                stdout = f"Generated {plot_count} {plot_word}"
 
             return RunResult(
                 stdout=stdout,
