@@ -1,0 +1,73 @@
+# SearXNG settings for LibreChat
+# See https://docs.searxng.org/admin/settings/ for more options
+
+use_default_settings: true
+
+general:
+  # Debug mode (set to false in production)
+  debug: false
+  # Instance name shown in the UI
+  instance_name: "LibreChat Search"
+
+server:
+  # Port and bind address
+  port: 8080
+  bind_address: "0.0.0.0"
+  # Secret key for session encryption (generate a random one for production)
+  secret_key: "change_this_secret_key_in_production"
+  # Enable JSON format responses (useful for API usage)
+  limiter: false
+  image_proxy: true
+
+search:
+  # Safe search filter
+  safe_search: 0  # 0=off, 1=moderate, 2=strict
+  # Autocomplete
+  autocomplete: "google"
+  # Default language
+  default_lang: "en"
+  # Number of results to fetch from each engine
+  formats:
+    - html
+    - json
+
+ui:
+  # Show advanced settings
+  static_use_hash: true
+  # Default theme
+  default_theme: simple
+  # Results on new tab
+  results_on_new_tab: false
+  # Infinite scroll
+  infinite_scroll: false
+  # Query in the page's title
+  query_in_title: true
+
+# Enabled search engines (can be customized)
+engines:
+  - name: google
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: wikipedia
+    disabled: false
+  - name: wikidata
+    disabled: false
+
+# Outgoing request configuration
+outgoing:
+  request_timeout: 3.0
+  max_request_timeout: 10.0
+  pool_connections: 100
+  pool_maxsize: 10
+  enable_http2: true
+
+# Enable HTTP for MCP server compatibility
+enabled_plugins:
+  - 'Hash plugin'
+  - 'Search on category select'
+  - 'Self Information'
+  - 'Tracker URL remover'
+

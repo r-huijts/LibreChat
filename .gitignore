@@ -116,6 +116,11 @@ auth.json
 # User uploads
 uploads/
 
+# SearXNG runtime data (keep settings.yml tracked)
+searxng/*.log
+searxng/uwsgi.ini
+searxng/__pycache__/
+
 # owner
 release/
 

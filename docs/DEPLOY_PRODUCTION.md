@@ -163,6 +163,25 @@ head -5 librechat.yaml
 
 **Important:** If `librechat.yaml` doesn't exist before starting Docker, Docker will create it as a **directory** which causes errors. Always ensure it exists as a **file** before the first `docker compose up`.
 
+#### Step 11a: Initialize SearXNG Configuration
+```bash
+# Create searxng directory if it doesn't exist
+mkdir -p searxng
+
+# Verify the directory was created
+ls -ld searxng
+
+# The settings.yml file should already be in git
+# If not, create minimal config:
+[ ! -f searxng/settings.yml ] && echo "use_default_settings: true" > searxng/settings.yml
+
+# Generate a secure secret key for production
+SEARXNG_SECRET=$(openssl rand -hex 32)
+echo "Update searxng/settings.yml with secret_key: $SEARXNG_SECRET"
+```
+
+**Note:** For production, edit `searxng/settings.yml` and update the `secret_key` with a secure random value.
+
 #### Step 12: Create/Update Production .env
 ```bash
 # Edit .env (or create if doesn't exist)
@@ -187,6 +206,11 @@ MEILI_MASTER_KEY=<GENERATE_SECURE_KEY>
 # RAG API Configuration
 RAG_PORT=8000
 RAG_API_URL=http://rag_api:8000
+
+# SearXNG Configuration (self-hosted search)
+SEARXNG_INSTANCE_URL=http://searxng:8080
+SEARXNG_API_KEY=
+SEARXNG_BASE_URL=http://localhost:8080/
 
 # Security Secrets - GENERATE SECURE RANDOM STRINGS
 SESSION_SECRET=<GENERATE_SECURE_SECRET>

@@ -23,6 +23,8 @@ This starts:
 - `devcontainer-app-1` - Main development container (Node 20)
 - `chat-mongodb` - MongoDB database (port 27017)
 - `chat-meilisearch` - Search engine (port 7700)
+- `code-interpreter-proxy` - Code execution proxy
+- `searxng` - Privacy-focused search engine (port 8080)
 
 **Expected output:**
 ```
@@ -250,8 +252,27 @@ The devcontainer uses settings from `.env`:
 - `ALLOW_UNVERIFIED_EMAIL_LOGIN=true` - No email verification needed
 - `MONGO_URI=mongodb://mongodb:27017/LibreChat`
 - `MEILI_HOST=http://meilisearch:7700`
+- `SEARXNG_INSTANCE_URL=http://searxng:8080` - SearXNG search endpoint
+- `SEARXNG_API_KEY=` - Optional API key for SearXNG
 
 To modify settings, edit `.env` and restart the backend (Step 4).
+
+### Enabling SearXNG Web Search
+
+1. Ensure SearXNG container is running (started automatically in Step 2)
+2. Verify it's accessible:
+   ```bash
+   curl http://localhost:8080/search?q=test&format=json
+   ```
+3. Configure in `librechat.yaml` by uncommenting the searxng section:
+   ```yaml
+   websearch:
+     providers:
+       searxng:
+         searxngInstanceUrl: '${SEARXNG_INSTANCE_URL}'
+         searxngApiKey: '${SEARXNG_API_KEY}'
+   ```
+4. For MCP integration, see `searxng/README.md` for MCP server configuration
 
 ## Summary
 
