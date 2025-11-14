@@ -7,6 +7,11 @@ services:
     links:
       - mongodb
       - meilisearch
+      - code-interpreter-proxy
+    depends_on:
+      - mongodb
+      - meilisearch
+      - code-interpreter-proxy
     ports:
       - 3080:3080  # Backend API
       - 3090:3090  # Frontend Dev Server
@@ -24,6 +29,8 @@ services:
       # - CHATGPT_REVERSE_PROXY=http://host.docker.internal:8080/api/conversation # if you are hosting your own chatgpt reverse proxy with docker
       # - OPENAI_REVERSE_PROXY=http://host.docker.internal:8070/v1/chat/completions # if you are hosting your own chatgpt reverse proxy with docker
       - MEILI_HOST=http://meilisearch:7700
+      - LIBRECHAT_CODE_BASEURL=http://code-interpreter-proxy:8000
+      - LIBRECHAT_CODE_API_KEY=${LIBRECHAT_CODE_API_KEY:-dev-ci-key}
 
     # Runs app on the same network as the service container, allows "forwardPorts" in devcontainer.json function.
     # network_mode: service:another-service
@@ -62,3 +69,21 @@ services:
       - MEILI_MASTER_KEY=5c71cf56d672d009e36070b5bc5e47b743535ae55c818ae3b735bb6ebfb4ba63
     volumes:
       - ./meili_data_v1.5:/meili_data
+
+  code-interpreter-proxy:
+    container_name: code-interpreter-proxy
+    build:
+      context: ../code-interpreter-proxy
+      dockerfile: Dockerfile
+    expose:
+      - 8000
+    environment:
+      - CI_API_KEY=${LIBRECHAT_CODE_API_KEY:-dev-ci-key}
+      - CI_BACKEND=docker
+      - CI_FILE_STORAGE_PATH=/data/code-interpreter
+    volumes:
+      - code_interpreter_files:/data/code-interpreter
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  code_interpreter_files:
