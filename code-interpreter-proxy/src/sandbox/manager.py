@@ -65,17 +65,22 @@ class SandboxSessionWrapper:
             session.open()
             self._session = session
 
+        logger.info("Opening sandbox session %s (language: %s)", self.session_id, self.language)
         await run_in_threadpool(_create)
+        logger.info("Sandbox session %s opened successfully", self.session_id)
 
     async def close(self) -> None:
         if self._session is None:
+            logger.debug("Session %s already closed or never opened", self.session_id)
             return
 
+        logger.info("Closing sandbox session %s", self.session_id)
         def _close() -> None:
             self._session.close()
 
         await run_in_threadpool(_close)
         self._session = None
+        logger.info("Sandbox session %s closed successfully", self.session_id)
 
     def is_expired(self) -> bool:
         return datetime.utcnow() > self.created_at + timedelta(minutes=settings.session_ttl_minutes)
@@ -301,24 +306,35 @@ class SessionManager:
             wrapper = self._sessions.pop(session_id, None)
 
         if not wrapper:
+            logger.warning("Attempted to delete non-existent session %s", session_id)
             return False
 
+        logger.info("Deleting session %s", session_id)
         await wrapper.close()
         await file_storage.cleanup_session(session_id)
+        logger.info("Session %s deleted successfully", session_id)
         return True
 
     async def start_cleanup_task(self) -> None:
         if self._cleanup_task and not self._cleanup_task.done():
+            logger.info("Cleanup task already running")
             return
+        logger.info(
+            "Starting session cleanup task (TTL: %d minutes, interval: %d seconds)",
+            settings.session_ttl_minutes,
+            CLEANUP_INTERVAL_SECONDS,
+        )
         self._cleanup_task = asyncio.create_task(self._cleanup_loop())
 
     async def stop_cleanup_task(self) -> None:
         if not self._cleanup_task:
             return
+        logger.info("Stopping session cleanup task")
         self._cleanup_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await self._cleanup_task
         self._cleanup_task = None
+        logger.info("Cleanup task stopped")
 
     async def _cleanup_loop(self) -> None:
         try:
@@ -331,12 +347,24 @@ class SessionManager:
     async def _cleanup_expired_sessions(self) -> None:
         expired: List[str] = []
         async with self._lock:
+            active_count = len(self._sessions)
             for session_id, wrapper in list(self._sessions.items()):
                 if wrapper.is_expired():
+                    age_minutes = (datetime.utcnow() - wrapper.created_at).total_seconds() / 60
+                    logger.info(
+                        "Session %s expired (age: %.1f minutes, TTL: %d minutes)",
+                        session_id,
+                        age_minutes,
+                        settings.session_ttl_minutes,
+                    )
                     expired.append(session_id)
 
-        for session_id in expired:
-            await self.delete_session(session_id)
+        if expired:
+            logger.info("Cleaning up %d expired session(s) out of %d active", len(expired), active_count)
+            for session_id in expired:
+                await self.delete_session(session_id)
+        else:
+            logger.debug("No expired sessions to clean up (active: %d)", active_count)
 
 
 session_manager = SessionManager()

@@ -2,10 +2,12 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
 from api import compat_router, router as api_router
 from config import settings
 from sandbox import session_manager
+from utils.docker_cleanup import sweep_stale_containers
 from utils.logging import configure_logging
 
 configure_logging()
@@ -35,6 +37,17 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup_event() -> None:
         logger.info("Starting code-interpreter-proxy")
+        if settings.sandbox_sweep_on_startup:
+            logger.info(
+                "Running Docker sweep for stale llm-sandbox containers (TTL=%d minutes)",
+                settings.session_ttl_minutes,
+            )
+            await run_in_threadpool(
+                sweep_stale_containers,
+                settings.session_ttl_minutes,
+                settings.sandbox_image_prefixes,
+                settings.sandbox_label,
+            )
         await session_manager.start_cleanup_task()
 
     @app.on_event("shutdown")

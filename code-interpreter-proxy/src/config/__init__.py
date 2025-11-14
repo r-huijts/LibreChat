@@ -1,6 +1,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 import os
 
 
@@ -11,6 +11,18 @@ class Settings(BaseSettings):
     max_memory_mb: int = 512
     max_run_timeout_seconds: int = 30
     session_ttl_minutes: int = 60
+    sandbox_image_prefixes: List[str] = Field(
+        default_factory=lambda: ["ghcr.io/vndee/sandbox-", "lfnovo/open_notebook"],
+        description="Image prefixes used by llm-sandbox containers",
+    )
+    sandbox_label: Optional[str] = Field(
+        default=None,
+        description="Optional Docker label to filter llm-sandbox containers",
+    )
+    sandbox_sweep_on_startup: bool = Field(
+        default=True,
+        description="Whether to prune stale llm-sandbox containers on startup",
+    )
     file_storage_path: str = "/data/code-interpreter"
     host: str = "0.0.0.0"
     port: int = 8000
