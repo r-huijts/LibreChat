@@ -197,6 +197,7 @@ endpoints:
     capabilities:
       - "context"
       - "ocr"
+      - "file_search"
   # assistants:
   #   disableBuilder: false # Disable Assistants Builder Interface by setting to `true`
   #   pollIntervalMs: 3000  # Polling interval for checking assistant updates

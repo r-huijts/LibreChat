@@ -1246,54 +1246,18 @@ class BaseClient {
   }
 
   async processAttachments(message, attachments) {
-    const categorizedAttachments = {
-      images: [],
-      documents: [],
-      videos: [],
-      audios: [],
-    };
+    if (this.options.endpoint === EModelEndpoint.google) {
+      return this.addImageURLs(message, attachments, 'parts');
+    }
 
-    for (const file of attachments) {
-      if (file.type.startsWith('image/')) {
-        categorizedAttachments.images.push(file);
-      } else if (file.type === 'application/pdf') {
-        categorizedAttachments.documents.push(file);
-      } else if (file.type.startsWith('video/')) {
-        categorizedAttachments.videos.push(file);
-      } else if (file.type.startsWith('audio/')) {
-        categorizedAttachments.audios.push(file);
+    if (this.isVisionModel) {
+      const visionAttachments = attachments.filter((file) => !file.embedded);
+      if (visionAttachments.length > 0) {
+        return this.addImageURLs(message, visionAttachments);
       }
     }
 
-    const [imageFiles, documentFiles, videoFiles, audioFiles] = await Promise.all([
-      categorizedAttachments.images.length > 0
-        ? this.addImageURLs(message, categorizedAttachments.images)
-        : Promise.resolve([]),
-      categorizedAttachments.documents.length > 0
-        ? this.addDocuments(message, categorizedAttachments.documents)
-        : Promise.resolve([]),
-      categorizedAttachments.videos.length > 0
-        ? this.addVideos(message, categorizedAttachments.videos)
-        : Promise.resolve([]),
-      categorizedAttachments.audios.length > 0
-        ? this.addAudios(message, categorizedAttachments.audios)
-        : Promise.resolve([]),
-    ]);
-
-    const allFiles = [...imageFiles, ...documentFiles, ...videoFiles, ...audioFiles];
-    const seenFileIds = new Set();
-    const uniqueFiles = [];
-
-    for (const file of allFiles) {
-      if (file.file_id && !seenFileIds.has(file.file_id)) {
-        seenFileIds.add(file.file_id);
-        uniqueFiles.push(file);
-      } else if (!file.file_id) {
-        uniqueFiles.push(file);
-      }
-    }
-
-    return uniqueFiles;
+    return attachments;
   }
 
   /**
