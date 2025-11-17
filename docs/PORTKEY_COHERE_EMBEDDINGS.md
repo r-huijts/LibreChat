@@ -20,34 +20,24 @@ LibreChat -> rag_api -> Portkey (Cohere) -> Cohere Embeddings
 
 ## Configuration
 
-1. **Set your Portkey key** (export or add to `.env`):
-   ```bash
-   PORTKEY_API_KEY=pk-your-key-here
-   ```
-
-2. **Review `config/portkey.env`** (loaded by `rag_api` automatically):
+1. **Add these variables to your `.env` file**:
    ```env
-   EMBEDDINGS_PROVIDER=custom
-   CUSTOM_EMBEDDINGS_URL=https://api.portkey.ai/v1/embeddings
-   CUSTOM_EMBEDDINGS_MODEL=Cohere-embed-v3-multilingual
-   CUSTOM_EMBEDDINGS_HEADERS={"x-portkey-api-key":"${PORTKEY_API_KEY}","Content-Type":"application/json"}
-   CUSTOM_EMBEDDINGS_BODY_TEMPLATE={"model":"{{model}}","input":{{texts}},"encoding_format":"float"}
+   EMBEDDINGS_PROVIDER=portkey
+   RAG_PORTKEY_API_KEY=your_portkey_api_key_here
+   RAG_PORTKEY_BASEURL=https://api.portkey.ai/v1
+   EMBEDDINGS_MODEL=Cohere-embed-v3-multilingual
    ```
-   - `CUSTOM_EMBEDDINGS_MODEL`: switch to `Cohere-embed-v3-english` if you only need English.
-   - `CUSTOM_EMBEDDINGS_HEADERS`: Portkey's auth header; update if your gateway expects different metadata.
+   - `EMBEDDINGS_MODEL`: switch to `Cohere-embed-v3-english` if you only need English.
+   - `RAG_PORTKEY_API_KEY`: Your Portkey API key (keep this out of version control).
 
-3. **Ensure compose picks up the file** (already wired):
-   - Root `docker-compose.yml`: `env_file` includes `.env` and `./config/portkey.env`.
-   - `.devcontainer/docker-compose.yml`: `env_file` includes `../config/portkey.env`.
-
-4. **Restart the services**:
+2. **Restart the services**:
    ```bash
    docker compose up -d rag_api
    # or restart the entire stack
    docker compose up -d
    ```
 
-5. **Optional: devcontainer rebuild** so the VS Code environment loads the new env file.
+3. **Optional: devcontainer rebuild** so the VS Code environment loads the new env file.
 
 ## Testing the Portkey endpoint
 
@@ -55,7 +45,7 @@ Before testing LibreChat, verify Portkey responds:
 
 ```bash
 curl https://api.portkey.ai/v1/embeddings \
-  -H "x-portkey-api-key: $PORTKEY_API_KEY" \
+  -H "x-portkey-api-key: $RAG_PORTKEY_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
         "input": "The food was delicious and the waiter...",
@@ -83,15 +73,15 @@ You should receive a JSON payload with `data[0].embedding`.
 
 ## Switching Models or Providers
 
-- Change `CUSTOM_EMBEDDINGS_MODEL` to any model exposed through Portkey (e.g., `Cohere-embed-v3-english`).
-- For other gateways (OpenAI, HuggingFace TEI, Ollama), adjust the URL/headers/body template accordingly.
-- No code updates are needed—composition env files supply everything.
+- Change `EMBEDDINGS_MODEL` to any model exposed through Portkey (e.g., `Cohere-embed-v3-english`).
+- For other embedding providers (OpenAI, custom gateways, etc.), change `EMBEDDINGS_PROVIDER` and adjust related variables accordingly.
+- No code updates are needed—environment variables control everything.
 
 ## Notes & Tips
 
-- Keep `PORTKEY_API_KEY` out of version control. Define it in `.env` or your secret manager.
-- `encoding_format` is set to `float` to match Cohere's API. If Portkey exposes BF16/INT8, update accordingly.
-- If you need retries, set `CUSTOM_EMBEDDINGS_TIMEOUT` or wrap Portkey with its own retry policy.
+- Keep `RAG_PORTKEY_API_KEY` out of version control. Define it in `.env` or your secret manager.
+- The RAG API will automatically use the `portkey` provider when `EMBEDDINGS_PROVIDER=portkey` is set.
+- If you need custom headers or body templates, use `EMBEDDINGS_PROVIDER=custom` with `CUSTOM_EMBEDDINGS_*` variables instead.
 
 With this setup, LibreChat's RAG pipeline runs entirely through your Portkey/Cohere stack, avoiding direct OpenAI dependency while retaining high-quality embeddings.
 

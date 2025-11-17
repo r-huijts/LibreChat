@@ -265,8 +265,8 @@ class AgentClient extends BaseClient {
       this.options.attachments = files;
     }
 
-    /** Note: Bedrock uses legacy RAG API handling */
-    if (this.message_file_map && !isAgentsEndpoint(this.options.endpoint)) {
+    /** Create context handlers for RAG-enabled file attachments */
+    if (this.message_file_map) {
       this.contextHandlers = createContextHandlers(
         this.options.req,
         orderedMessages[orderedMessages.length - 1].text,

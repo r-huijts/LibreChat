@@ -559,6 +559,48 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
      * @return {Promise<void>}
      */
     const createTextFile = async ({ text, bytes, filepath, type = 'text/plain' }) => {
+      let embedded = false;
+      let vectorFilepath = filepath;
+
+      // If RAG API is available and this is a message attachment, embed the text for context search
+      if (process.env.RAG_API_URL && messageAttachment) {
+        try {
+          const path = require('path');
+          const os = require('os');
+          const { uploadVectors } = require('./VectorDB/crud');
+
+          // Create temporary .txt file with extracted text
+          const tempFilePath = path.join(os.tmpdir(), `${file_id}.txt`);
+          await fs.promises.writeFile(tempFilePath, text, 'utf8');
+
+          // Create a temporary file object for uploadVectors
+          const tempFile = {
+            path: tempFilePath,
+            originalname: file.originalname.replace(/\.[^/.]+$/, '.txt'),
+            size: Buffer.byteLength(text, 'utf8'),
+            mimetype: 'text/plain',
+          };
+
+          // Embed the text file
+          const embeddingResult = await uploadVectors({
+            req,
+            file: tempFile,
+            file_id,
+            entity_id: undefined,
+          });
+
+          // Clean up temp file
+          await fs.promises.unlink(tempFilePath).catch(() => {});
+
+          embedded = embeddingResult.embedded;
+          if (embedded) {
+            vectorFilepath = embeddingResult.filepath;
+          }
+        } catch (error) {
+          logger.warn('[createTextFile] Failed to embed text, continuing without embedding:', error.message);
+        }
+      }
+
       const fileInfo = removeNullishValues({
         text,
         bytes,
@@ -566,11 +608,12 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
         temp_file_id,
         user: req.user.id,
         type,
-        filepath: filepath ?? file.path,
-        source: FileSources.text,
+        filepath: embedded ? vectorFilepath : (filepath ?? file.path),
+        source: embedded ? FileSources.vectordb : FileSources.text,
         filename: file.originalname,
         model: messageAttachment ? undefined : req.body.model,
         context: messageAttachment ? FileContext.message_attachment : FileContext.agents,
+        embedded,
       });
 
       if (!messageAttachment && tool_resource) {
