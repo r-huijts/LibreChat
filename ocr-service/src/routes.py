@@ -133,7 +133,12 @@ async def perform_ocr(request: OCRRequest):
         )
 
     # Extract file ID (handle both direct IDs and URLs)
-    file_id = file_ref.split("/")[-1]
+    # Handle URLs like: /files/{file_id}/download or /files/{file_id}
+    parts = file_ref.rstrip("/").split("/")
+    if parts[-1] == "download":
+        file_id = parts[-2]
+    else:
+        file_id = parts[-1]
 
     # Retrieve file from storage
     file_data = await _storage.get_file(file_id)

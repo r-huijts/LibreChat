@@ -430,10 +430,13 @@ export const uploadMistralOCR = async (context: OCRContext): Promise<MistralOCRU
       await deleteMistralFile({ fileId: mistralFileId, apiKey, baseURL });
     }
 
+    // Use the actual OCR strategy from config, defaulting to mistral_ocr
+    const ocrStrategy = context.req.config?.ocr?.strategy || FileSources.mistral_ocr;
+
     return {
       filename: context.file.originalname,
       bytes: text.length * 4,
-      filepath: FileSources.mistral_ocr,
+      filepath: ocrStrategy,
       text,
       images,
     };
