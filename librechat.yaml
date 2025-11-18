@@ -1,5 +1,13 @@
+# ============================================================================
+# LIBRECHAT CONFIGURATION FILE
+# ============================================================================
 # For more information, see the Configuration Guide:
 # https://www.librechat.ai/docs/configuration/librechat_yaml
+# ============================================================================
+
+# ============================================================================
+# SECTION 1: CORE CONFIGURATION
+# ============================================================================
 
 # Configuration version (required)
 version: 1.2.1
@@ -7,7 +15,9 @@ version: 1.2.1
 # Cache settings: Set to true to enable caching
 cache: true
 
-# File storage configuration
+# ============================================================================
+# SECTION 2: FILE STORAGE CONFIGURATION
+# ============================================================================
 # Single strategy for all file types (legacy format, still supported)
 # fileStrategy: "s3"
 
@@ -25,13 +35,18 @@ cache: true
 # - Use Firebase for images with automatic optimization
 # - Use local storage for documents for privacy/compliance
 
-# Custom interface configuration
+# ============================================================================
+# SECTION 3: INTERFACE / UI CONFIGURATION
+# ============================================================================
+
 interface:
-  customWelcome: 'Welcome to LibreChat! Enjoy your experience.'
+  customWelcome: 'Welcome to Fontys Solis! Enjoy your experience.'
+  
   # Enable/disable file search as a chatarea selection (default: true)
   # Note: This setting does not disable the Agents File Search Capability.
   # To disable the Agents Capability, see the Agents Endpoint configuration instead.
   fileSearch: true
+  
   # Privacy policy settings
   privacyPolicy:
     externalUrl: 'https://librechat.ai/privacy-policy'
@@ -80,6 +95,7 @@ interface:
 
       By using the Website, you acknowledge that you have read these Terms of Service and agree to be bound by them.
 
+  # UI Feature Toggles
   endpointsMenu: true
   modelSelect: true
   parameters: true
@@ -87,32 +103,50 @@ interface:
   presets: true
   prompts: true
   bookmarks: true
-  multiConvo: true
+  multiConvo: false
+  webSearch: false
   agents: true
+  fileCitations: true
+  
+  # People Picker Configuration
   peoplePicker:
     users: true
     groups: true
     roles: true
+  
+  # Marketplace Configuration
   marketplace:
-      use: false
-  fileCitations: true
+    use: false
+  
+  # MCP Servers Placeholder
+  mcpServers: 
+    placeholder: "Tools"
+  
   # Temporary chat retention period in hours (default: 720, min: 1, max: 8760)
   # temporaryChatRetention: 1
 
-# Example Cloudflare turnstile (optional)
-#turnstile:
-#  siteKey: "your-site-key-here"
-#  options:
-#    language: "auto"    # "auto" or an ISO 639-1 language code (e.g. en)
-#    size: "normal"      # Options: "normal", "compact", "flexible", or "invisible"
+# ============================================================================
+# SECTION 4: AUTHENTICATION & REGISTRATION
+# ============================================================================
 
-# Example Registration Object Structure (optional)
+# Cloudflare Turnstile (optional - commented out)
+# turnstile:
+#   siteKey: "your-site-key-here"
+#   options:
+#     language: "auto"    # "auto" or an ISO 639-1 language code (e.g. en)
+#     size: "normal"      # Options: "normal", "compact", "flexible", or "invisible"
+
+# Registration Configuration
 registration:
-  #socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
+  # socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
   allowedDomains:
-   - "fontys.nl"
+    - "fontys.nl"
 
-# Example Balance settings
+# ============================================================================
+# SECTION 5: BALANCE & TRANSACTIONS (OPTIONAL - COMMENTED OUT)
+# ============================================================================
+
+# Balance settings
 # balance:
 #   enabled: false
 #   startBalance: 20000
@@ -121,13 +155,17 @@ registration:
 #   refillIntervalUnit: 'days'
 #   refillAmount: 10000
 
-# Example Transactions settings
+# Transactions settings
 # Controls whether to save transaction records to the database
 # Default is true (enabled)
-#transactions:
-#  enabled: false
+# transactions:
+#   enabled: false
 # Note: If balance.enabled is true, transactions will always be enabled
 # regardless of this setting to ensure balance tracking works correctly
+
+# ============================================================================
+# SECTION 6: SPEECH CONFIGURATION (OPTIONAL - COMMENTED OUT)
+# ============================================================================
 
 # speech:
 #   tts:
@@ -136,13 +174,16 @@ registration:
 #       apiKey: '${TTS_API_KEY}'
 #       model: ''
 #       voices: ['']
-
 #
 #   stt:
 #     openai:
 #       url: ''
 #       apiKey: '${STT_API_KEY}'
 #       model: ''
+
+# ============================================================================
+# SECTION 7: RATE LIMITS (OPTIONAL - COMMENTED OUT)
+# ============================================================================
 
 # rateLimits:
 #   fileUploads:
@@ -156,14 +197,21 @@ registration:
 #     userMax: 50
 #     userWindowInMinutes: 60  # Rate limit window for conversation imports per user
 
-# Example Actions Object Structure
+# ============================================================================
+# SECTION 8: ACTIONS CONFIGURATION
+# ============================================================================
+
 actions:
   allowedDomains:
     - 'swapi.dev'
     - 'librechat.ai'
     - 'google.com'
 
-# Example MCP Servers Object Structure
+# ============================================================================
+# SECTION 9: MCP SERVERS CONFIGURATION
+# ============================================================================
+
+# Example MCP Servers Object Structure (commented out)
 # mcpServers:
 #   everything:
 #     # type: sse # type can optionally be omitted
@@ -191,13 +239,30 @@ actions:
 #       - "mcp-obsidian"
 #       - /path/to/obsidian/vault
 
-# Definition of custom endpoints
+# Active MCP Servers Configuration
+mcpServers:
+  websearch:
+    command: npx
+    args: 
+      - -y 
+      - "mcp-searxng"
+    env:
+      SEARXNG_URL: "http://searxng:8080"
+
+# ============================================================================
+# SECTION 10: ENDPOINTS CONFIGURATION
+# ============================================================================
+
 endpoints:
+  # Agents Endpoint Configuration
   agents:
     capabilities:
       - "context"
       - "ocr"
       - "file_search"
+      - "artifacts"
+  
+  # Assistants Endpoint Configuration (commented out)
   # assistants:
   #   disableBuilder: false # Disable Assistants Builder Interface by setting to `true`
   #   pollIntervalMs: 3000  # Polling interval for checking assistant updates
@@ -211,6 +276,8 @@ endpoints:
   #   retrievalModels: ["gpt-4-turbo-preview"]
   #   # (optional) Assistant Capabilities available to all users. Omit the ones you wish to exclude. Defaults to list below.
   #   capabilities: ["code_interpreter", "retrieval", "actions", "tools", "image_vision"]
+  
+  # Agents Endpoint Advanced Configuration (commented out)
   # agents:
   #   # (optional) Default recursion depth for agents, defaults to 25
   #   recursionLimit: 50
@@ -227,8 +294,10 @@ endpoints:
   #   minRelevanceScore: 0.45
   #   # (optional) Agent Capabilities available to all users. Omit the ones you wish to exclude. Defaults to list below.
   #   capabilities: ["execute_code", "file_search", "actions", "tools"]
+  
+  # Custom Endpoints Configuration
   custom:
-    # Groq Example
+    # Groq Example (commented out)
     # - name: 'groq'
     #   apiKey: '${GROQ_API_KEY}'
     #   baseURL: 'https://api.groq.com/openai/v1/'
@@ -246,52 +315,52 @@ endpoints:
     #   titleModel: 'mixtral-8x7b-32768'
     #   modelDisplayLabel: 'groq'
 
-    # # Mistral AI Example
+    # Mistral AI Example (commented out)
     # - name: 'Mistral' # Unique name for the endpoint
     #   # For `apiKey` and `baseURL`, you can use environment variables that you define.
     #   # recommended environment variables:
     #   apiKey: '${MISTRAL_API_KEY}'
     #   baseURL: 'https://api.mistral.ai/v1'
-
+    #
     #   # Models configuration
     #   models:
     #     # List of default models to use. At least one value is required.
     #     default: ['mistral-tiny', 'mistral-small', 'mistral-medium']
     #     # Fetch option: Set to true to fetch models from API.
     #     fetch: true # Defaults to false.
-
+    #
     #   # Optional configurations
-
+    #
     #   # Title Conversation setting
     #   titleConvo: true # Set to true to enable title conversation
-
+    #
     #   # Title Method: Choose between "completion" or "functions".
     #   # titleMethod: "completion"  # Defaults to "completion" if omitted.
-
+    #
     #   # Title Model: Specify the model to use for titles.
     #   titleModel: 'mistral-tiny' # Defaults to "gpt-3.5-turbo" if omitted.
-
+    #
     #   # Summarize setting: Set to true to enable summarization.
     #   # summarize: false
-
+    #
     #   # Summary Model: Specify the model to use if summarization is enabled.
     #   # summaryModel: "mistral-tiny"  # Defaults to "gpt-3.5-turbo" if omitted.
-
+    #
     #   # Force Prompt setting: If true, sends a `prompt` parameter instead of `messages`.
     #   # forcePrompt: false
-
+    #
     #   # The label displayed for the AI model in messages.
     #   modelDisplayLabel: 'Mistral' # Default is "AI" when not set.
-
+    #
     #   # Add additional parameters to the request. Default params will be overwritten.
     #   # addParams:
     #   # safe_prompt: true # This field is specific to Mistral AI: https://docs.mistral.ai/api/
-
+    #
     #   # Drop Default params parameters from the request. See default params in guide linked below.
     #   # NOTE: For Mistral, it is necessary to drop the following parameters or you will encounter a 422 Error:
     #   dropParams: ['stop', 'user', 'frequency_penalty', 'presence_penalty']
 
-    # # OpenRouter Example
+    # OpenRouter Example (commented out)
     # - name: 'OpenRouter'
     #   # For `apiKey` and `baseURL`, you can use environment variables that you define.
     #   # recommended environment variables:
@@ -308,7 +377,7 @@ endpoints:
     #   dropParams: ['stop']
     #   modelDisplayLabel: 'OpenRouter'
 
-    # Portkey AI Configuration
+    # Portkey AI Configuration (ACTIVE)
     - name: 'Portkey'
       apiKey: 'ktw6lAKV3hSX2UdS9do/L6raip6c'
       baseURL: 'https://api.portkey.ai/v1'
@@ -325,37 +394,62 @@ endpoints:
       forcePrompt: false
       modelDisplayLabel: 'Portkey'
       iconURL: https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf
-# fileConfig:
-#   endpoints:
-#     assistants:
-#       fileLimit: 5
-#       fileSizeLimit: 10  # Maximum size for an individual file in MB
-#       totalSizeLimit: 50  # Maximum total size for all files in a single request in MB
-#       supportedMimeTypes:
-#         - "image/.*"
-#         - "application/pdf"
-#     openAI:
-#       disabled: true  # Disables file uploading to the OpenAI endpoint
-#     default:
-#       totalSizeLimit: 20
-#     YourCustomEndpointName:
-#       fileLimit: 2
-#       fileSizeLimit: 5
-#   serverFileSizeLimit: 100  # Global server file size limit in MB
-#   avatarSizeLimit: 2  # Limit for user avatar image size in MB
-#   imageGeneration: # Image Gen settings, either percentage or px
-#     percentage: 100
-#     px: 1024
-#   # Client-side image resizing to prevent upload errors
-#   clientImageResize:
-#     enabled: false  # Enable/disable client-side image resizing (default: false)
-#     maxWidth: 1900  # Maximum width for resized images (default: 1900)
-#     maxHeight: 1900  # Maximum height for resized images (default: 1900)
-#     quality: 0.92  # JPEG quality for compression (0.0-1.0, default: 0.92)
-# # See the Custom Configuration Guide for more information on Assistants Config:
-# # https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/assistants_endpoint
 
-# Web Search Configuration (optional)
+# ============================================================================
+# SECTION 11: FILE CONFIGURATION
+# ============================================================================
+# See the Custom Configuration Guide for more information on Assistants Config:
+# https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/assistants_endpoint
+
+fileConfig:
+  endpoints:
+    agents:
+      fileLimit: 10  # Allow multiple files per upload
+      fileSizeLimit: 10  # 10MB - matches OCR service limit
+      totalSizeLimit: 50  # 50MB total per request (5 files × 10MB)
+      supportedMimeTypes:
+        # Images (for OCR and RAG)
+        - "image/(jpeg|gif|png|webp|heic|heif|bmp|tiff)$"
+        # PDFs (for OCR and RAG)
+        - "application/pdf$"
+        # Office documents (for RAG only - OCR doesn't support these)
+        - "application/vnd\\.openxmlformats-officedocument\\.(wordprocessingml\\.document|presentationml\\.presentation|spreadsheetml\\.sheet)$"
+        - "application/vnd\\.ms-(word|powerpoint|excel)$"
+        # Text files (for RAG and text parsing)
+        - "text/(plain|markdown|csv|json|xml|html|css|javascript|typescript|x-python|x-java|x-csharp|x-php|x-ruby|x-go|x-rust|x-kotlin|x-swift|x-scala|x-perl|x-lua|x-shell|x-sql|x-yaml|x-toml)$"
+        # Other text-based formats
+        - "application/(json|xml|csv|epub\\+zip)$"
+    default:  # Applies to Portkey endpoint
+      fileLimit: 5
+      fileSizeLimit: 10  # Match OCR limit
+      totalSizeLimit: 30
+      supportedMimeTypes:
+        - "image/(jpeg|gif|png|webp|heic|heif)$"
+        - "application/pdf$"
+        - "text/.*"
+        - "application/(json|xml|csv)$"
+  serverFileSizeLimit: 10  # Global max - matches OCR service limit
+  avatarSizeLimit: 2
+  fileTokenLimit: 100000  # Important for RAG context limits
+  imageGeneration:
+    percentage: 100
+    px: 1024
+  ocr:
+    # Match exactly what your OCR service supports (PDFs and images only)
+    supportedMimeTypes:
+      - "^image/(jpeg|gif|png|webp|bmp|tiff)$"  # Only image types your OCR supports
+      - "^application/pdf$"  # PDFs only
+      # NOTE: Do NOT include Office docs here - your OCR service doesn't support them
+  text:
+    # For "Upload as text" feature - broad text file support
+    supportedMimeTypes:
+      - "^text/(plain|markdown|csv|json|xml|html|css|javascript|typescript|x-python|x-java|x-csharp|x-php|x-ruby|x-go|x-rust|x-kotlin|x-swift|x-scala|x-perl|x-lua|x-shell|x-sql|x-yaml|x-toml)$"
+      - "^application/(json|xml|csv)$"
+
+# ============================================================================
+# SECTION 12: WEB SEARCH CONFIGURATION (OPTIONAL - COMMENTED OUT)
+# ============================================================================
+
 # webSearch:
 #   # Jina Reranking Configuration
 #   jinaApiKey: '${JINA_API_KEY}'  # Your Jina API key
@@ -373,7 +467,10 @@ endpoints:
 #   firecrawlApiKey: '${FIRECRAWL_API_KEY}'
 #   firecrawlApiUrl: '${FIRECRAWL_API_URL}'
 
-# Memory configuration for user memories
+# ============================================================================
+# SECTION 13: MEMORY CONFIGURATION (OPTIONAL - COMMENTED OUT)
+# ============================================================================
+
 # memory:
 #   # (optional) Disable memory functionality
 #   disabled: false
@@ -395,8 +492,11 @@ endpoints:
 #     # model_parameters:
 #     #   temperature: 0.1
 
-# Model Specifications with Modal Information
+# ============================================================================
+# SECTION 14: MODEL SPECIFICATIONS
+# ============================================================================
 # Configure model-specific information modals that appear when users switch models
+
 modelSpecs:
   enforce: false # If true, only models defined here will be available
   prioritize: true # If true, specs will appear first in model selector
@@ -523,17 +623,15 @@ modelSpecs:
         modelCardUrl: "https://www.anthropic.com/claude"
         requireAcknowledgment: true
 
-# OCR Configuration
+# ============================================================================
+# SECTION 15: OCR CONFIGURATION
+# ============================================================================
+
 ocr:
   apiKey: "${OCR_API_KEY}"
   baseURL: "http://ocr-service:8000/v1"
   strategy: "custom_ocr"
 
-mcpServers:
-  websearch:
-    command: npx
-    args: 
-      - -y 
-      - "mcp-searxng"
-    env:
-      SEARXNG_URL: "http://searxng:8080"
+# ============================================================================
+# END OF CONFIGURATION FILE
+# ============================================================================
