@@ -84,6 +84,21 @@ services:
     volumes:
       - ocr_files:/data/ocr
 
+  # piper-tts:
+  #   container_name: piper-tts
+  #   image: localai/localai:latest-aio-cpu
+  #   platform: linux/amd64  # Force amd64 emulation for ARM64 hosts
+  #   restart: always
+  #   expose:
+  #     - 8080  # HTTP API port
+  #   environment:
+  #     - TZ=UTC
+  #     - THREADS=4
+  #     - CONTEXT_SIZE=512
+  #   volumes:
+  #     - ./piper-tts/voices:/build/models
+  #     - ./piper-tts/config:/build/config:ro
+
 volumes:
   pgdata2:
   ocr_files:

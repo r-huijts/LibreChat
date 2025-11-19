@@ -116,7 +116,7 @@ interface:
   
   # Marketplace Configuration
   marketplace:
-    use: false
+      use: false
   
   # MCP Servers Placeholder
   mcpServers: 
@@ -140,7 +140,7 @@ interface:
 registration:
   # socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
   allowedDomains:
-    - "fontys.nl"
+   - "fontys.nl"
 
 # ============================================================================
 # SECTION 5: BALANCE & TRANSACTIONS (OPTIONAL - COMMENTED OUT)
@@ -164,22 +164,33 @@ registration:
 # regardless of this setting to ensure balance tracking works correctly
 
 # ============================================================================
-# SECTION 6: SPEECH CONFIGURATION (OPTIONAL - COMMENTED OUT)
+# SECTION 6: SPEECH CONFIGURATION
 # ============================================================================
 
-# speech:
-#   tts:
-#     openai:
-#       url: ''
-#       apiKey: '${TTS_API_KEY}'
-#       model: ''
-#       voices: ['']
-#
-#   stt:
-#     openai:
-#       url: ''
-#       apiKey: '${STT_API_KEY}'
-#       model: ''
+speech:
+  tts:
+    localai:
+      url: "http://piper-tts:8080/tts"  # Internal Docker network URL (LocalAI HTTP API)
+      apiKey: ""  # Empty string (no auth required)
+      voices: [
+        # English voices
+        "en_US-amy-low.onnx",
+        "en_US-danny-low.onnx",
+        "en_US-libritts-high.onnx",
+        "en_US-ryan-high.onnx",
+        # Dutch voices
+        "nl_NL-mls_5809-low.onnx",
+        "nl_NL-mls_7432-low.onnx",
+        "nl_NL-rdh-medium.onnx"
+      ]
+      backend: "piper"
+  
+  # STT (Speech-to-Text) configuration (optional - commented out)
+  # stt:
+  #   openai:
+  #     url: ''
+  #     apiKey: '${STT_API_KEY}'
+  #     model: ''
 
 # ============================================================================
 # SECTION 7: RATE LIMITS (OPTIONAL - COMMENTED OUT)
@@ -385,7 +396,7 @@ endpoints:
         x-portkey-api-key: 'ktw6lAKV3hSX2UdS9do/L6raip6c'
         x-portkey-config: "pc-em-rhu-5927e5"
       models:
-        default: ['mistral-medium', 'gemini-2.5-flash-image-preview', 'gpt-5-mini', 'green-r', 'claude-sonnet-4']
+        default: ['mistral-medium', 'gemini-2.5-flash-image-preview', 'gpt-5-mini', 'green-r', 'claude-sonnet-4', 'gpt-image']
         fetch: false
       titleConvo: true
       titleModel: 'current_model'
@@ -524,6 +535,7 @@ modelSpecs:
       preset:
         endpoint: "Portkey"
         model: "gemini-2.5-flash-image-preview"
+        image_model: true
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
         costLevel: "low"
@@ -577,6 +589,29 @@ modelSpecs:
         costLevel: "medium"
         countryCode: "FR"
         intendedUse: "Green-R is a specialized model with unique capabilities. Review the model documentation to understand its specific strengths and use cases."
+        
+        warnings:
+          - title: "Specialized Model"
+            description: "This model may have specific capabilities or limitations that differ from general-purpose models. Ensure it meets your specific requirements."
+            severity: "info"
+            acknowledgment: "I understand this is a specialized model and have reviewed its capabilities"
+        
+        modelCardUrl: "https://greenpt.ai" # Update with actual documentation URL
+        requireAcknowledgment: true
+    
+    # Gptimage
+    - name: "portkey-gpt-image"
+      label: "GPT Image"
+      description: "Sweden hosted GPT image generation model"
+      preset:
+        endpoint: "Portkey"
+        model: "gpt-image"
+        image_model: true
+      iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
+      modalInfo:
+        costLevel: "medium"
+        countryCode: "SE"
+        intendedUse: "GPT-image is a specialized model with unique capabilities. Review the model documentation to understand its specific strengths and use cases."
         
         warnings:
           - title: "Specialized Model"

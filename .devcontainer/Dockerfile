@@ -1,5 +1,6 @@
-FROM node:22-bookworm
+FROM mcr.microsoft.com/devcontainers/javascript-node:22-bookworm
 
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install necessary build tools and Python for node-gyp
 RUN apt-get update && apt-get install -y \
     python3 \

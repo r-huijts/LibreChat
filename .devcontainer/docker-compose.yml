@@ -12,6 +12,7 @@ services:
       - ocr-service
       - vectordb
       - rag_api
+      # - piper-tts
     depends_on:
       - mongodb
       - meilisearch
@@ -20,11 +21,12 @@ services:
       - ocr-service
       - vectordb
       - rag_api
+      # - piper-tts
     ports:
       - 3080:3080  # Backend API
       - 3090:3090  # Frontend Dev Server
     extra_hosts: # if you are running APIs on docker you need access to, you will need to uncomment this line and next
-    - "host.docker.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
 
     volumes:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
@@ -147,6 +149,20 @@ services:
       - ../.env
     expose:
       - 8000
+
+  # piper-tts:
+  #   container_name: piper-tts
+  #   image: localai/localai:latest-aio-cpu
+  #   platform: linux/amd64  # Force amd64 emulation for ARM64 hosts
+  #   expose:
+  #     - 8080  # HTTP API port
+  #   environment:
+  #     - TZ=UTC
+  #     - THREADS=4
+  #     - CONTEXT_SIZE=512
+  #   volumes:
+  #     - ../piper-tts/voices:/build/models
+  #     - ../piper-tts/config:/build/config:ro
 
 volumes:
   code_interpreter_files:

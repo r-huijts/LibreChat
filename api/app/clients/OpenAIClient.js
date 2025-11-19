@@ -1050,6 +1050,66 @@ ${convo}
   }
 
   async chatCompletion({ payload, onProgress, abortController = null }) {
+    // --- START CUSTOM IMAGE LOGIC ---
+    if (this.modelOptions.image_model) {
+      try {
+        let prompt;
+        if (Array.isArray(payload)) {
+          const lastMsg = payload[payload.length - 1];
+          if (Array.isArray(lastMsg.content)) {
+            prompt = lastMsg.content
+              .filter((c) => c.type === 'text')
+              .map((c) => c.text)
+              .join(' ');
+          } else {
+            prompt = lastMsg.content;
+          }
+        } else {
+          prompt = payload;
+        }
+
+        const baseURL = extractBaseURL(this.completionsUrl);
+        const opts = {
+          baseURL,
+          apiKey: this.apiKey,
+          defaultHeaders: this.options.headers || {},
+          fetchOptions: {},
+        };
+
+        if (this.options.proxy) {
+          opts.fetchOptions.agent = new HttpsProxyAgent(this.options.proxy);
+        }
+
+        /** @type {OpenAI} */
+        const openai = new OpenAI({
+          fetch: createFetch({
+            directEndpoint: this.options.directEndpoint,
+            reverseProxyUrl: this.options.reverseProxyUrl,
+          }),
+          ...opts,
+        });
+
+        const response = await openai.images.generate({
+          model: this.modelOptions.model,
+          prompt,
+          n: 1,
+          size: '1024x1024',
+          response_format: 'b64_json',
+        });
+
+        const image = response.data[0];
+        const markdown = image.url
+          ? `![Generated Image](${image.url})`
+          : `![Generated Image](data:image/png;base64,${image.b64_json})`;
+
+        return markdown;
+      } catch (err) {
+        logger.error('[OpenAIClient] Error generating image:', err);
+        return `Error generating image: ${err.message}`;
+      }
+    }
+    // --- END CUSTOM IMAGE LOGIC ---
+
     const appConfig = this.options.req?.config;
     let error = null;
     let intermediateReply = [];

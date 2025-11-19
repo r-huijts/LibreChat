@@ -33,6 +33,7 @@ export interface IPreset extends Document {
   system?: string;
   resendFiles?: boolean;
   imageDetail?: string;
+  image_model?: boolean;
   agent_id?: string;
   assistant_id?: string;
   instructions?: string;
