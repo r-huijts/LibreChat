@@ -1,9 +1,0 @@
-{
-  "date": "Wed, 19 Nov 2025 08:39:00 GMT",
-  "content-type": "application/json",
-  "content-length": "69",
-  "connection": "keep-alive",
-  "cf-ray": "9a0e64ff691bf5c7-AMS",
-  "server": "cloudflare",
-  "alt-svc": "h3=\":443\"; ma=86400"
-}

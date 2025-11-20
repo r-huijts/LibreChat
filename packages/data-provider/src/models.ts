@@ -42,6 +42,7 @@ export type TModelSpec = {
   iconURL?: string | EModelEndpoint; // Allow using project-included icons
   authType?: AuthType;
   modalInfo?: TModelModalInfo;
+  imageGeneration?: boolean; // If true, this model uses image generation endpoint instead of chat completion
 };
 
 const modelWarningSchema = z.object({
@@ -78,6 +79,7 @@ export const tModelSpecSchema = z.object({
   iconURL: z.union([z.string(), eModelEndpointSchema]).optional(),
   authType: authTypeSchema.optional(),
   modalInfo: modelModalInfoSchema.optional(),
+  imageGeneration: z.boolean().optional(), // If true, this model uses image generation endpoint instead of chat completion
 });
 
 export const specsConfigSchema = z.object({

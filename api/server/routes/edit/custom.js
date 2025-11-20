@@ -9,6 +9,7 @@ const {
   validateEndpoint,
   buildEndpointOption,
 } = require('~/server/middleware');
+const handleImageGenerationMiddleware = require('~/server/middleware/handleImageGeneration');
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.post(
   '/',
   validateEndpoint,
   validateModel,
+  handleImageGenerationMiddleware, // Intercept image generation requests before building endpoint option
   buildEndpointOption,
   setHeaders,
   async (req, res, next) => {

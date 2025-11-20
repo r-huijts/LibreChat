@@ -535,7 +535,6 @@ modelSpecs:
       preset:
         endpoint: "Portkey"
         model: "gemini-2.5-flash-image-preview"
-        image_model: true
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
       modalInfo:
         costLevel: "low"
@@ -606,8 +605,8 @@ modelSpecs:
       preset:
         endpoint: "Portkey"
         model: "gpt-image"
-        image_model: true
       iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
+      imageGeneration: true # This model uses image generation endpoint instead of chat completion
       modalInfo:
         costLevel: "medium"
         countryCode: "SE"

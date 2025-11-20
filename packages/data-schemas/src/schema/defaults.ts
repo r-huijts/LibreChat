@@ -94,9 +94,6 @@ export const conversationPreset = {
   imageDetail: {
     type: String,
   },
-  image_model: {
-    type: Boolean,
-  },
   /* agents */
   agent_id: {
     type: String,
