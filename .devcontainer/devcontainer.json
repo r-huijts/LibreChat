@@ -13,6 +13,7 @@
     }
   },
   "postCreateCommand": "",
+  "postStartCommand": "cd /workspaces && if [ -d .git ]; then git fetch origin 2>/dev/null || true; CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo ''); if [ -n \"$CURRENT_BRANCH\" ] && [ \"$CURRENT_BRANCH\" != \"HEAD\" ]; then git checkout \"$CURRENT_BRANCH\" 2>/dev/null || (git fetch origin \"$CURRENT_BRANCH\" 2>/dev/null && git checkout -b \"$CURRENT_BRANCH\" \"origin/$CURRENT_BRANCH\" 2>/dev/null) || true; fi; fi",
   "features": { "ghcr.io/devcontainers/features/git:1": {} },
   "remoteUser": "vscode"
 }
