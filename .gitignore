@@ -66,10 +66,6 @@ bower_components/
 .floo
 .flooignore
 
-#config file
-# librechat.yaml - Removed from gitignore to version control configuration
-# librechat.yml - Removed from gitignore to version control configuration
-
 # Environment
 .npmrc
 .env*
@@ -115,11 +111,6 @@ auth.json
 
 # User uploads
 uploads/
-
-# SearXNG runtime data (keep settings.yml tracked)
-searxng/*.log
-searxng/uwsgi.ini
-searxng/__pycache__/
 
 # owner
 release/
