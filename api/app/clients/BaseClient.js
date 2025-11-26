@@ -782,9 +782,30 @@ class BaseClient {
       responseMessage.attachments = (await Promise.all(this.artifactPromises)).filter((a) => a);
     }
 
+    // Add generated images from message.images array (e.g., Gemini image generation)
+    if (this.generatedImages && Array.isArray(this.generatedImages) && this.generatedImages.length > 0) {
+      if (!responseMessage.files) {
+        responseMessage.files = [];
+      }
+      responseMessage.files.push(...this.generatedImages);
+      
+      // Also add file_ids to saveOptions for database persistence
+      if (!saveOptions.files) {
+        saveOptions.files = [];
+      }
+      saveOptions.files.push(...this.generatedImages.map((img) => img.file_id));
+      
+      logger.debug('[BaseClient] Added generated images to response message', {
+        imageCount: this.generatedImages.length,
+      });
+    }
+
     if (this.options.attachments) {
       try {
-        saveOptions.files = this.options.attachments.map((attachments) => attachments.file_id);
+        if (!saveOptions.files) {
+          saveOptions.files = [];
+        }
+        saveOptions.files.push(...this.options.attachments.map((attachments) => attachments.file_id));
       } catch (error) {
         logger.error('[BaseClient] Error mapping attachments for conversation', error);
       }

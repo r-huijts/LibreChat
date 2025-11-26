@@ -25,7 +25,10 @@ const {
   getResponseSender,
   validateVisionModel,
   mapModelToAzureConfig,
+  FileContext,
 } = require('librechat-data-provider');
+const { saveBase64Image } = require('~/server/services/Files/process');
+const { v4 } = require('uuid');
 const {
   truncateText,
   formatMessage,
@@ -1330,6 +1333,17 @@ ${convo}
               finalChatCompletion.choices[0].message.role = 'assistant';
             }
 
+            // Preserve images array if present (e.g., Gemini image generation)
+            if (Array.isArray(finalMessage.images) && finalMessage.images.length > 0) {
+              logger.debug('[OpenAIClient] finalChatCompletion: Preserving images array', {
+                imageCount: finalMessage.images.length,
+              });
+              // Ensure images are preserved in the final completion
+              if (!finalChatCompletion.choices[0].message.images) {
+                finalChatCompletion.choices[0].message.images = finalMessage.images;
+              }
+            }
+
             if (typeof finalMessage.content !== 'string' || finalMessage.content.trim() === '') {
               finalChatCompletion.choices[0].message.content = this.streamHandler.tokens.join('');
             }
@@ -1422,11 +1436,102 @@ ${convo}
       const { message, finish_reason } = choices[0] ?? {};
       this.metadata = { finish_reason };
 
-      logger.debug('[OpenAIClient] chatCompletion response', chatCompletion);
+      // Log to both logger and console for visibility
+      const logData = {
+        hasMessage: !!message,
+        messageKeys: message ? Object.keys(message) : [],
+        hasImages: Array.isArray(message?.images),
+        imageCount: message?.images?.length ?? 0,
+        messageContent: typeof message?.content,
+        chatCompletionKeys: Object.keys(chatCompletion),
+      };
+      logger.debug('[OpenAIClient] chatCompletion response', logData);
+      console.log('[OpenAIClient] chatCompletion response:', JSON.stringify(logData, null, 2));
+      if (message?.images) {
+        console.log('[OpenAIClient] MESSAGE.IMAGES FOUND:', JSON.stringify(message.images, null, 2));
+      }
 
       if (!message) {
         logger.warn('[OpenAIClient] Message is undefined in chatCompletion response');
         return this.streamHandler.tokens.join('');
+      }
+
+      // Handle images in message.images array (e.g., Gemini image generation)
+      if (Array.isArray(message.images) && message.images.length > 0) {
+        const imageLog = { imageCount: message.images.length };
+        logger.debug('[OpenAIClient] Processing images from message.images array', imageLog);
+        console.log('[OpenAIClient] Processing images from message.images array:', JSON.stringify(imageLog, null, 2));
+
+        this.generatedImages = [];
+        const imageMarkdowns = [];
+
+        for (const imageItem of message.images) {
+          try {
+            let imageUrl = null;
+
+            // Extract base64 data from image_url.url if present
+            if (imageItem.image_url?.url) {
+              imageUrl = imageItem.image_url.url;
+            } else if (imageItem.url) {
+              imageUrl = imageItem.url;
+            }
+
+            if (!imageUrl) {
+              logger.warn('[OpenAIClient] Image item missing URL', imageItem);
+              continue;
+            }
+
+            // Extract base64 data (handle both data:image/...;base64, and raw base64)
+            let base64Data = imageUrl;
+            if (imageUrl.startsWith('data:')) {
+              const base64Match = imageUrl.match(/data:image\/[^;]+;base64,(.+)/);
+              if (base64Match) {
+                base64Data = `data:image/png;base64,${base64Match[1]}`;
+              }
+            } else if (!imageUrl.startsWith('http')) {
+              // Assume it's raw base64
+              base64Data = `data:image/png;base64,${imageUrl}`;
+            }
+
+            // Save the image
+            const file_id = v4();
+            const filename = `img-${file_id}.png`;
+
+            const savedFile = await saveBase64Image(base64Data, {
+              req: this.options.req,
+              file_id,
+              filename,
+              endpoint: this.options.endpoint,
+              context: FileContext.image_generation,
+            });
+
+            this.generatedImages.push({
+              file_id: savedFile.file_id,
+              filepath: savedFile.filepath,
+              filename: savedFile.filename,
+              type: savedFile.type,
+              bytes: savedFile.bytes,
+              width: savedFile.width,
+              height: savedFile.height,
+            });
+
+            imageMarkdowns.push(`![generated image](${savedFile.filepath})`);
+            logger.debug('[OpenAIClient] Saved generated image', {
+              file_id: savedFile.file_id,
+              filepath: savedFile.filepath,
+            });
+          } catch (error) {
+            logger.error('[OpenAIClient] Error processing image from message.images', error);
+          }
+        }
+
+        // Return text content with image markdowns, or just image markdowns if content is empty
+        const textContent =
+          typeof message.content === 'string' && message.content.trim()
+            ? message.content
+            : '';
+        const imagesText = imageMarkdowns.join('\n');
+        return textContent ? `${textContent}\n\n${imagesText}` : imagesText;
       }
 
       if (typeof message.content !== 'string' || message.content.trim() === '') {

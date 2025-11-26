@@ -96,11 +96,11 @@ interface:
       By using the Website, you acknowledge that you have read these Terms of Service and agree to be bound by them.
 
   # UI Feature Toggles
-  endpointsMenu: true
+  endpointsMenu: false
   modelSelect: true
   parameters: true
   sidePanel: true
-  presets: true
+  presets: false
   prompts: true
   bookmarks: true
   multiConvo: false
@@ -396,7 +396,7 @@ endpoints:
         x-portkey-api-key: 'ktw6lAKV3hSX2UdS9do/L6raip6c'
         x-portkey-config: "pc-em-rhu-5927e5"
       models:
-        default: ['mistral-medium', 'gemini-2.5-flash-image-preview', 'gpt-5-mini', 'green-r', 'claude-sonnet-4', 'gpt-image']
+        default: ['mistral-medium', 'gemini-2.5-flash-image-preview', 'gpt-5-mini', 'green-r', 'claude-sonnet-4']
         fetch: false
       titleConvo: true
       titleModel: 'current_model'
@@ -482,26 +482,26 @@ fileConfig:
 # SECTION 13: MEMORY CONFIGURATION (OPTIONAL - COMMENTED OUT)
 # ============================================================================
 
-# memory:
-#   # (optional) Disable memory functionality
-#   disabled: false
-#   # (optional) Restrict memory keys to specific values to limit memory storage and improve consistency
-#   validKeys: ["preferences", "work_info", "personal_info", "skills", "interests", "context"]
-#   # (optional) Maximum token limit for memory storage (not yet implemented for token counting)
-#   tokenLimit: 10000
-#   # (optional) Enable personalization features (defaults to true if memory is configured)
-#   # When false, users will not see the Personalization tab in settings
-#   personalize: true
-#   # Memory agent configuration - either use an existing agent by ID or define inline
-#   agent:
-#     # Option 1: Use existing agent by ID
-#     id: "your-memory-agent-id"
-#     # Option 2: Define agent inline
-#     # provider: "openai"
-#     # model: "gpt-4o-mini"
-#     # instructions: "You are a memory management assistant. Store and manage user information accurately."
-#     # model_parameters:
-#     #   temperature: 0.1
+memory:
+  # (optional) Disable memory functionality
+  disabled: true
+  # (optional) Restrict memory keys to specific values to limit memory storage and improve consistency
+  # validKeys: ["preferences", "work_info", "personal_info", "skills", "interests", "context"]
+  # (optional) Maximum token limit for memory storage (not yet implemented for token counting)
+  # tokenLimit: 10000
+  # (optional) Enable personalization features (defaults to true if memory is configured)
+  # When false, users will not see the Personalization tab in settings
+  # personalize: true
+  # Memory agent configuration - either use an existing agent by ID or define inline
+  # agent:
+    # Option 1: Use existing agent by ID
+    # id: "your-memory-agent-id"
+    # Option 2: Define agent inline
+    # provider: "openai"
+    # model: "gpt-4o-mini"
+    # instructions: "You are a memory management assistant. Store and manage user information accurately."
+    # model_parameters:
+    #   temperature: 0.1
 
 # ============================================================================
 # SECTION 14: MODEL SPECIFICATIONS
@@ -511,7 +511,7 @@ fileConfig:
 modelSpecs:
   enforce: false # If true, only models defined here will be available
   prioritize: true # If true, specs will appear first in model selector
-  addedEndpoints: ["agents"] # Only show agents endpoint in the dropdown (Portkey models are handled by modelSpecs)
+  addedEndpoints: ["agents"] # Show agents and Portkey endpoints in the dropdown (Portkey models are handled by modelSpecs)
   list:
     # Mistral Medium via Azure AI
     - name: "portkey-mistral-medium"
@@ -588,29 +588,6 @@ modelSpecs:
         costLevel: "medium"
         countryCode: "FR"
         intendedUse: "Green-R is a specialized model with unique capabilities. Review the model documentation to understand its specific strengths and use cases."
-        
-        warnings:
-          - title: "Specialized Model"
-            description: "This model may have specific capabilities or limitations that differ from general-purpose models. Ensure it meets your specific requirements."
-            severity: "info"
-            acknowledgment: "I understand this is a specialized model and have reviewed its capabilities"
-        
-        modelCardUrl: "https://greenpt.ai" # Update with actual documentation URL
-        requireAcknowledgment: true
-    
-    # Gptimage
-    - name: "portkey-gpt-image"
-      label: "GPT Image"
-      description: "Sweden hosted GPT image generation model"
-      preset:
-        endpoint: "Portkey"
-        model: "gpt-image"
-      iconURL: "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/rjqy7ghvjoiu4cd1xjbf"
-      imageGeneration: true # This model uses image generation endpoint instead of chat completion
-      modalInfo:
-        costLevel: "medium"
-        countryCode: "SE"
-        intendedUse: "GPT-image is a specialized model with unique capabilities. Review the model documentation to understand its specific strengths and use cases."
         
         warnings:
           - title: "Specialized Model"

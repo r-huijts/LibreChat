@@ -35,7 +35,9 @@ router.post('/', async (req, res) => {
     if (
       error.message?.includes('Invalid file format') ||
       error.message?.includes('No OCR result') ||
-      error.message?.includes('exceeds token limit')
+      error.message?.includes('exceeds token limit') ||
+      error.message?.includes('Image uploads are not supported for file search') ||
+      error.message?.includes('not supported for file search')
     ) {
       message = error.message;
     }

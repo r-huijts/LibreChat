@@ -122,7 +122,7 @@ const AttachFileMenu = ({
         items.push({
           label: localize('com_ui_upload_provider'),
           onClick: () => {
-            setToolResource(EToolResources.file_search);
+            setToolResource(undefined);
             onAction(
               (provider || endpoint) === EModelEndpoint.google ? 'google_multimodal' : 'multimodal',
             );

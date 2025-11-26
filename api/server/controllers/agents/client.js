@@ -616,7 +616,138 @@ class AgentClient extends BaseClient {
       userMCPAuthMap: opts.userMCPAuthMap,
       abortController: opts.abortController,
     });
+    
+    // Check for images in the agent's final response
+    // The underlying LLM (OpenAIClient) may have returned images in message.images
+    // but the agent framework only extracts text. We need to check the run's state.
+    try {
+      if (this.run && typeof this.run.getState === 'function') {
+        const state = this.run.getState();
+        // Check the final messages for images
+        if (state?.values?.messages && Array.isArray(state.values.messages)) {
+          for (const message of state.values.messages) {
+            // Check if message has images (from LLM response)
+            if (message?.additional_kwargs?.response_metadata?.raw_response) {
+              const rawResponse = message.additional_kwargs.response_metadata.raw_response;
+              if (rawResponse?.choices?.[0]?.message?.images) {
+                const images = rawResponse.choices[0].message.images;
+                logger.debug('[AgentClient] Found images in raw LLM response', {
+                  imageCount: images.length,
+                });
+                console.log('[AgentClient] Found images in raw LLM response:', images.length);
+                // Process images similar to OpenAIClient
+                await this.processImagesFromResponse(images);
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.debug('[AgentClient] Could not extract images from agent response', error);
+    }
+    
     return this.contentParts;
+  }
+
+  /**
+   * Process images from LLM response (e.g., Gemini image generation)
+   * Similar to OpenAIClient's image processing
+   */
+  async processImagesFromResponse(images) {
+    if (!Array.isArray(images) || images.length === 0) {
+      return;
+    }
+
+    const { saveBase64Image } = require('~/server/services/Files/process');
+    const { FileContext } = require('librechat-data-provider');
+    const { v4 } = require('uuid');
+
+    this.generatedImages = [];
+    const imageMarkdowns = [];
+
+    for (const imageItem of images) {
+      try {
+        let imageUrl = null;
+
+        // Extract base64 data from image_url.url if present
+        if (imageItem.image_url?.url) {
+          imageUrl = imageItem.image_url.url;
+        } else if (imageItem.url) {
+          imageUrl = imageItem.url;
+        }
+
+        if (!imageUrl) {
+          logger.warn('[AgentClient] Image item missing URL', imageItem);
+          continue;
+        }
+
+        // Extract base64 data (handle both data:image/...;base64, and raw base64)
+        let base64Data = imageUrl;
+        if (imageUrl.startsWith('data:')) {
+          const base64Match = imageUrl.match(/data:image\/[^;]+;base64,(.+)/);
+          if (base64Match) {
+            base64Data = `data:image/png;base64,${base64Match[1]}`;
+          }
+        } else if (!imageUrl.startsWith('http')) {
+          // Assume it's raw base64
+          base64Data = `data:image/png;base64,${imageUrl}`;
+        }
+
+        // Save the image
+        const file_id = v4();
+        const filename = `img-${file_id}.png`;
+
+        const savedFile = await saveBase64Image(base64Data, {
+          req: this.options.req,
+          file_id,
+          filename,
+          endpoint: this.options.endpoint,
+          context: FileContext.image_generation,
+        });
+
+        this.generatedImages.push({
+          file_id: savedFile.file_id,
+          filepath: savedFile.filepath,
+          filename: savedFile.filename,
+          type: savedFile.type,
+          bytes: savedFile.bytes,
+          width: savedFile.width,
+          height: savedFile.height,
+        });
+
+        imageMarkdowns.push(`![generated image](${savedFile.filepath})`);
+        logger.debug('[AgentClient] Saved generated image', {
+          file_id: savedFile.file_id,
+          filepath: savedFile.filepath,
+        });
+      } catch (error) {
+        logger.error('[AgentClient] Error processing image from response', error);
+      }
+    }
+
+    // Add image markdowns to contentParts if we have images
+    if (imageMarkdowns.length > 0 && this.contentParts.length > 0) {
+      const lastTextPart = this.contentParts
+        .slice()
+        .reverse()
+        .find((part) => part.type === ContentTypes.TEXT);
+      if (lastTextPart) {
+        const currentText = lastTextPart[ContentTypes.TEXT]?.value || lastTextPart[ContentTypes.TEXT] || '';
+        lastTextPart[ContentTypes.TEXT] = {
+          ...(typeof lastTextPart[ContentTypes.TEXT] === 'object' ? lastTextPart[ContentTypes.TEXT] : {}),
+          value: currentText + '\n\n' + imageMarkdowns.join('\n'),
+        };
+      } else {
+        // Add new text part with images
+        this.contentParts.push({
+          type: ContentTypes.TEXT,
+          [ContentTypes.TEXT]: {
+            value: imageMarkdowns.join('\n'),
+          },
+        });
+      }
+    }
   }
 
   /**

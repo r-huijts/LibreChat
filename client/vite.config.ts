@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   base: '',
-  logLevel: 'warn', // Reduce verbosity: 'info' | 'warn' | 'error' | 'silent'
+  logLevel: 'error', // Reduce verbosity: 'info' | 'warn' | 'error' | 'silent'
   server: {
     host: '0.0.0.0',
     port: 3090,
@@ -95,6 +95,9 @@ export default defineConfig(({ command }) => ({
     }),
   ],
   publicDir: command === 'serve' ? './public' : false,
+  css: {
+    devSourcemap: false, // Disable CSS sourcemaps in dev to reduce verbosity
+  },
   build: {
     sourcemap: process.env.NODE_ENV === 'development',
     outDir: './dist',
@@ -240,7 +243,16 @@ export default defineConfig(({ command }) => ({
        * @see {@link https://github.com/TanStack/query/pull/5161#issuecomment-1477389761 Preserve 'use client' directives TanStack/query#5161}
        */
       onwarn(warning, warn) {
+        // Suppress sourcemap warnings
         if (warning.message.includes('Error when using sourcemap')) {
+          return;
+        }
+        // Suppress CSS-related verbose warnings during development
+        if (process.env.NODE_ENV === 'development' && (
+          warning.message.includes('sourcemap') ||
+          warning.code === 'CSS_SYNTAX_ERROR' ||
+          warning.plugin === 'vite:css'
+        )) {
           return;
         }
         warn(warning);

@@ -76,8 +76,9 @@ async function buildEndpointOption(req, res, next) {
   }
 
   try {
-    const isAgents =
-      isAgentsEndpoint(endpoint) || req.baseUrl.startsWith(EndpointURLs[EModelEndpoint.agents]);
+    const isAgentsRoute = req.baseUrl.startsWith(EndpointURLs[EModelEndpoint.agents]);
+    const isAgentsEndpoint_ = isAgentsEndpoint(endpoint);
+    const isAgents = isAgentsEndpoint_ || isAgentsRoute;
     const builder = isAgents
       ? (...args) => buildFunction[EModelEndpoint.agents](req, ...args)
       : buildFunction[endpointType ?? endpoint];
@@ -85,7 +86,9 @@ async function buildEndpointOption(req, res, next) {
     // TODO: use object params
     req.body.endpointOption = await builder(endpoint, parsedBody, endpointType);
 
-    if (req.body.files && !isAgents) {
+    // Process files for non-agents endpoints, even if going through agents route (ephemeral agents)
+    // For actual agents endpoints, files are processed in initializeAgent
+    if (req.body.files && !isAgentsEndpoint_) {
       req.body.endpointOption.attachments = processFiles(req.body.files);
     }
 

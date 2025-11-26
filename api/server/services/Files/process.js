@@ -508,15 +508,24 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
   const { file } = req;
   const appConfig = req.config;
   const { agent_id, tool_resource, file_id, temp_file_id = null } = metadata;
+  
+  let messageAttachment = !!metadata.message_file;
+  
+  // Message attachments bypass tool resource restrictions
+  // Images uploaded as message attachments should work like regular model endpoints
+  if (messageAttachment && file.mimetype.startsWith('image')) {
+    // For message attachments, treat images like regular image uploads
+    // Process through standard image processing, not tool resources
+    return await processImageFile({ req, res, metadata });
+  }
+  
   if (agent_id && !tool_resource) {
     throw new Error('No tool resource provided for agent file upload');
   }
 
   if (tool_resource === EToolResources.file_search && file.mimetype.startsWith('image')) {
-    throw new Error('Image uploads are not supported for file search tool resources');
+    throw new Error('Image uploads are not supported for file search tool resources. Use "Upload Image to Input" for image message attachments.');
   }
-
-  let messageAttachment = !!metadata.message_file;
   if (!messageAttachment && !agent_id) {
     throw new Error('No agent ID provided for agent file upload');
   }
